@@ -1,0 +1,29 @@
+# Core analysis
+numpy>=1.24
+pandas>=2.0
+scipy>=1.11
+
+# Graph analysis
+networkx>=3.2
+
+# Machine learning
+torch>=2.0
+torchvision>=0.15
+
+# Sparse / hardware
+# cuSPARSE — via PyTorch CUDA or NVIDIA toolkit (install separately)
+
+# Visualization
+matplotlib>=3.7
+seaborn>=0.12
+
+# Utilities
+tqdm>=4.65
+jupyter>=1.0
+jupyterlab>=4.0
+
+# Data formats
+pyarrow>=12.0
+
+# Testing
+pytest>=7.4

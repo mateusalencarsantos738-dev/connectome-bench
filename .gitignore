@@ -1,0 +1,73 @@
+# ─── Dados brutos e processados (nunca versionar datasets grandes) ───────────
+data/raw/*
+data/processed/*
+data/metadata/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/metadata/.gitkeep
+
+# ─── Resultados gerados ───────────────────────────────────────────────────────
+results/tables/*
+results/figures/*
+results/logs/*
+!results/tables/.gitkeep
+!results/figures/.gitkeep
+!results/logs/.gitkeep
+
+# ─── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.pyo
+*.pyd
+
+# ─── Ambientes virtuais ───────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+.env/
+
+# ─── Jupyter ──────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ─── Modelos e checkpoints grandes ───────────────────────────────────────────
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.h5
+*.pkl
+*.pickle
+*.npy
+*.npz
+
+# ─── Formatos de dados pesados ────────────────────────────────────────────────
+*.csv.gz
+*.parquet
+*.feather
+*.arrow
+*.hdf5
+*.hdf
+*.zarr
+
+# ─── IDEs / editores ──────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── Logs e temporários ───────────────────────────────────────────────────────
+*.log
+tmp/
+temp/
+scratch/
