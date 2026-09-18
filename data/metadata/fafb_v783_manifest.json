@@ -1,0 +1,45 @@
+{
+  "_readme": "FlyWire FAFB v783 — Dataset Manifest. NO API TOKEN stored here.",
+  "_updated": "2026-09-18T21:51:00Z",
+  "_dataset": "FAFB v783 (Female Adult Fly Brain)",
+  "_source": "https://codex.flywire.ai/",
+  "_download_endpoint": "https://codex.flywire.ai/api/download_resource?data_product=<product>&dataset=fafb",
+  "_auth": "Requires CODEX_API_TOKEN env var (never commit token to Git)",
+  "_papers": {
+    "connectome": "https://www.nature.com/articles/s41586-024-07558-y",
+    "network_stats": "https://www.nature.com/articles/s41586-024-07968-y",
+    "cell_typing": "https://www.nature.com/articles/s41586-024-07686-5"
+  },
+  "_official_stats": {
+    "source": "FlyWire Codex (codex.flywire.ai)",
+    "neurons": 139255,
+    "connections_official": 3732460,
+    "note": "Official connection count (3,732,460) refers to dataset-level statistics, NOT necessarily the CSV row count. The downloaded CSV may have more rows due to multi-neuropil records per neuron pair."
+  },
+  "connections_princeton": {
+    "dataset": "FAFB",
+    "version": "783",
+    "source": "FlyWire / Codex",
+    "data_product": "connections_princeton",
+    "filename": "connections_princeton.csv.gz",
+    "url_base": "https://codex.flywire.ai/api/download_resource?data_product=connections_princeton&dataset=fafb",
+    "status": "PENDING — file not yet present in data/raw/ locally",
+    "known_from_kaggle": {
+      "shape_rows": 5342446,
+      "shape_cols": 5,
+      "columns": ["pre_root_id", "post_root_id", "neuropil", "syn_count", "nt_type"],
+      "note": "Values observed during earlier Kaggle session. Awaiting local download and verification."
+    },
+    "note": "api_token NOT stored here — use CODEX_API_TOKEN env var"
+  },
+  "consolidated_cell_types": {
+    "dataset": "FAFB",
+    "version": "783",
+    "source": "FlyWire / Codex",
+    "data_product": "consolidated_cell_types",
+    "filename": "consolidated_cell_types.csv.gz",
+    "url_base": "https://codex.flywire.ai/api/download_resource?data_product=consolidated_cell_types&dataset=fafb",
+    "status": "PENDING — not yet downloaded",
+    "note": "api_token NOT stored here — use CODEX_API_TOKEN env var"
+  }
+}

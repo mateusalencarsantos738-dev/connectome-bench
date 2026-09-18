@@ -1,10 +1,12 @@
 # ─── Dados brutos e processados (nunca versionar datasets grandes) ───────────
 data/raw/*
 data/processed/*
-data/metadata/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
-!data/metadata/.gitkeep
+
+# ─── Metadados são versionados (manifests, não datasets) ─────────────────────
+# data/metadata/ is intentionally tracked (JSON manifests, no tokens)
+!data/metadata/
 
 # ─── Resultados gerados ───────────────────────────────────────────────────────
 results/tables/*
