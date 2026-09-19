@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.sparse as sp
 
-def calculate_sparsity(adj_matrix: sp.spmatrix) -> float:
+def calculate_sparsity(adj_matrix: sp.csr_matrix) -> float:
     """
     Calcula a esparsidade do grafo.
     Esparsidade = 1.0 - (arestas / (nodos * nodos))
@@ -17,7 +17,7 @@ def calculate_sparsity(adj_matrix: sp.spmatrix) -> float:
     density = nnz / total_possible if total_possible > 0 else 0
     return 1.0 - density
 
-def get_degrees(adj_matrix: sp.spmatrix):
+def get_degrees(adj_matrix: sp.csr_matrix):
     """
     Calcula os graus de entrada (in-degree) e saída (out-degree).
     Na matriz de adjacência A, A[i, j] = 1 significa aresta de i -> j.
@@ -50,7 +50,7 @@ def find_hubs(degrees: np.ndarray, top_k: int = 10):
     hub_values = degrees[hub_indices]
     return hub_indices, hub_values
 
-def calculate_reciprocity(adj_matrix: sp.spmatrix) -> float:
+def calculate_reciprocity(adj_matrix: sp.csr_matrix) -> float:
     """
     Calcula a reciprocidade do grafo direcionado usando operações matriciais esparsas.
     Reciprocidade é a fração das arestas para as quais a aresta no sentido oposto também existe.
