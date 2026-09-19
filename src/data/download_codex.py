@@ -259,7 +259,7 @@ def main():
             "filename": filename,
             "path": str(dest),
             "url_base": f"{DOWNLOAD_RESOURCE_ENDPOINT}?data_product={product}&dataset={DATASET}",
-            "download_timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+            "download_timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00', 'Z'),
             "size_bytes": size_bytes,
             "size_human": size_human,
             "sha256": file_hash,
@@ -281,6 +281,8 @@ def main():
     print()
 
     for product, info in manifest.items():
+        if product.startswith("_"):
+            continue
         print(f"  [{product}]")
         print(f"    File:    {info['filename']}")
         print(f"    Size:    {info.get('size_human', 'unknown')}")

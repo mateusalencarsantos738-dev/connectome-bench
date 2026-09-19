@@ -1,5 +1,5 @@
 {
-  "_readme": "FlyWire FAFB v783 — Dataset Manifest. NO API TOKEN stored here.",
+  "_readme": "FlyWire FAFB v783 \u2014 Dataset Manifest. NO API TOKEN stored here.",
   "_updated": "2026-09-18T21:51:00Z",
   "_dataset": "FAFB v783 (Female Adult Fly Brain)",
   "_source": "https://codex.flywire.ai/",
@@ -22,15 +22,22 @@
     "source": "FlyWire / Codex",
     "data_product": "connections_princeton",
     "filename": "connections_princeton.csv.gz",
+    "path": "/home/teus/lua/projeto MOSCA/data/raw/connections_princeton.csv.gz",
     "url_base": "https://codex.flywire.ai/api/download_resource?data_product=connections_princeton&dataset=fafb",
-    "status": "PENDING — file not yet present in data/raw/ locally",
-    "known_from_kaggle": {
-      "shape_rows": 5342446,
-      "shape_cols": 5,
-      "columns": ["pre_root_id", "post_root_id", "neuropil", "syn_count", "nt_type"],
-      "note": "Values observed during earlier Kaggle session. Awaiting local download and verification."
-    },
-    "note": "api_token NOT stored here — use CODEX_API_TOKEN env var"
+    "validated_timestamp": "2026-09-18T22:03:52.346907Z",
+    "size_bytes": 68456801,
+    "size_human": "65.3 MB",
+    "sha256": "445f996bf6c4b1803b9ba186189138a3061ff8623aa94c0abcf38af30a5bd48b",
+    "row_count_raw": 5342447,
+    "data_row_count": 5342446,
+    "columns": [
+      "pre_root_id",
+      "post_root_id",
+      "neuropil",
+      "syn_count",
+      "nt_type"
+    ],
+    "note": "api_token NOT stored here \u2014 use CODEX_API_TOKEN env var"
   },
   "consolidated_cell_types": {
     "dataset": "FAFB",
@@ -38,8 +45,19 @@
     "source": "FlyWire / Codex",
     "data_product": "consolidated_cell_types",
     "filename": "consolidated_cell_types.csv.gz",
+    "path": "/home/teus/lua/projeto MOSCA/data/raw/consolidated_cell_types.csv.gz",
     "url_base": "https://codex.flywire.ai/api/download_resource?data_product=consolidated_cell_types&dataset=fafb",
-    "status": "PENDING — not yet downloaded",
-    "note": "api_token NOT stored here — use CODEX_API_TOKEN env var"
+    "validated_timestamp": "2026-09-18T22:03:52.446862Z",
+    "size_bytes": 901707,
+    "size_human": "0.9 MB",
+    "sha256": "8aba246d71dc40361677493629972ce3883048c3d02010adc42bda22962a1a2d",
+    "row_count_raw": 138328,
+    "data_row_count": 138327,
+    "columns": [
+      "root_id",
+      "primary_type",
+      "additional_type(s)"
+    ],
+    "note": "api_token NOT stored here \u2014 use CODEX_API_TOKEN env var"
   }
 }

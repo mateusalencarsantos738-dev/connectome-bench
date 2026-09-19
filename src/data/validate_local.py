@@ -100,7 +100,7 @@ def validate_file(path: pathlib.Path, product: str) -> dict:
         "filename": path.name,
         "path": str(path),
         "url_base": f"https://codex.flywire.ai/api/download_resource?data_product={product}&dataset=fafb",
-        "validated_timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+        "validated_timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00', 'Z'),
         "size_bytes": size,
         "size_human": size_human,
         "sha256": file_hash,
