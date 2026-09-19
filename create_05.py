@@ -9,9 +9,9 @@ nb.cells.append(nbf.v4.new_markdown_cell("""# ConnectomeBench: Arquitetura Conec
 Nesta fase damos o salto da Topologia (matemática) e Biologia (tipos celulares) para o Machine Learning real.
 Nós transformamos a matriz estática da mosca em uma rede neural PyTorch com restrição de topologia.
 
-- **Camada de Entrada (Encoder):** Os pixels do Fashion-MNIST (784) se conectarão APENAS aos neurônios "sensoriais" da mosca.
+- **Camada de Entrada (Encoder):** Os pixels do CIFAR-10 (3072, coloridos) se conectarão APENAS aos neurônios "sensoriais" da mosca.
 - **Camada Oculta (Cérebro):** O sinal flui internamente usando a `MaskedLinear`, otimizando e calculando APENAS as 5 milhões de arestas reais (e não 19 bilhões que uma camada densa comum teria).
-- **Camada de Saída (Readout):** Lemos a resposta final (10 categorias de roupas) observando APENAS os neurônios "motores".
+- **Camada de Saída (Readout):** Lemos a resposta final (10 categorias de objetos) observando APENAS os neurônios "motores".
 """))
 
 nb.cells.append(nbf.v4.new_code_cell("""import sys
@@ -97,16 +97,16 @@ print(f"Neurônios alocados como SENSORIAIS: {len(sensory_indices):,}")
 print(f"Neurônios alocados como MOTORES: {len(motor_indices):,}")
 """))
 
-nb.cells.append(nbf.v4.new_markdown_cell("""## 3. Preparando o PyTorch e Dataset Fashion-MNIST
+nb.cells.append(nbf.v4.new_markdown_cell("""## 3. Preparando o PyTorch e Dataset CIFAR-10
 """))
 
 nb.cells.append(nbf.v4.new_code_cell("""device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Treinando em: {device}")
 
-# Download do Fashion-MNIST
+# Download do CIFAR-10
 transform = transforms.Compose([transforms.ToTensor(), transforms.Lambda(lambda x: torch.flatten(x))])
-train_dataset = datasets.FashionMNIST('../data/external', train=True, download=True, transform=transform)
-test_dataset = datasets.FashionMNIST('../data/external', train=False, download=True, transform=transform)
+train_dataset = datasets.CIFAR10('../data/external', train=True, download=True, transform=transform)
+test_dataset = datasets.CIFAR10('../data/external', train=False, download=True, transform=transform)
 
 # Pegaremos um subset minúsculo apenas para provar que a rede não quebra (PoC)
 subset_indices = list(range(1000))
@@ -120,7 +120,7 @@ nb.cells.append(nbf.v4.new_markdown_cell("""## 4. Construindo e Treinando a Inte
 
 nb.cells.append(nbf.v4.new_code_cell("""print("Construindo o modelo ConnectomeModel...")
 model = ConnectomeModel(
-    input_dim=784,
+    input_dim=3072,
     hidden_dim=mapper.num_nodes,
     output_dim=10,
     adj_mask=adj_real,
@@ -132,10 +132,10 @@ criterion = nn.CrossEntropyLoss()
 # Taxa de aprendizado alta porque a rede oculta não vai passar muito gradiente limpo de primeira
 optimizer = optim.Adam(model.parameters(), lr=0.01) 
 
-print("\\nIniciando treinamento (PoC - 5 épocas no subset de 1000 imagens)...")
+print("\\nIniciando treinamento (PoC - 10 épocas no subset de 1000 imagens)...")
 model.train()
 
-for epoch in range(5):
+for epoch in range(10):
     total_loss = 0
     correct = 0
     total = 0
@@ -158,7 +158,7 @@ for epoch in range(5):
         correct += predicted.eq(batch_y).sum().item()
         
     acc = 100. * correct / total
-    print(f"Época {epoch+1}/5 | Tempo: {time.time()-start_time:.1f}s | Loss: {total_loss/len(train_loader):.4f} | Acc: {acc:.2f}%")
+    print(f"Época {epoch+1}/10 | Tempo: {time.time()-start_time:.1f}s | Loss: {total_loss/len(train_loader):.4f} | Acc: {acc:.2f}%")
 """))
 
 nb.cells.append(nbf.v4.new_markdown_cell("""## Conclusão
