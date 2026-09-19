@@ -73,7 +73,7 @@ class MaskedLinear(nn.Module):
     def forward(self, x):
         out = SparseMatMul.apply(x, self.indices, self.weight_values, self.shape)
         if self.bias is not None:
-            out += self.bias
+            out = out + self.bias
         return out
 
 
