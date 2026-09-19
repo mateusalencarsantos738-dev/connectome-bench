@@ -15,6 +15,7 @@ ConnectomeBench is a research/engineering project. Its purpose is **not** to ass
 **Project:** ConnectomeBench
 
 **Themes**
+
 - connectomics
 - computational neuroscience
 - sparse neural networks
@@ -48,8 +49,10 @@ Do not assume the answer.
 9. Make experiments reproducible.
 10. Prefer small, testable experiments before large simulations.
 11. Negative results are valid results.
+12. The connectome is a source of hypotheses, not necessarily the final architecture. Discovered properties may be abstracted, modified, and optimized beyond the original biological topology.
 
 Examples of legitimate negative findings:
+
 - lower FLOPs but higher latency because of irregular memory access;
 - good temporal performance but poor image-classification performance;
 - sparse mathematics without real hardware speedup;
@@ -75,6 +78,7 @@ The current connection table contains:
     nt_type
 
 Meaning:
+
 - `pre_root_id`: presynaptic/source neuron
 - `post_root_id`: postsynaptic/destination neuron
 - `neuropil`: anatomical region associated with the connection record
@@ -96,10 +100,12 @@ Primary dataset:
 **FlyWire FAFB v783 — Female Adult Fly Brain**
 
 Official Codex currently lists:
+
 - 139,255 neurons
 - 3,732,460 connections
 
 The original FlyWire whole-brain paper reports:
+
 - 139,255 reconstructed neurons
 - approximately 54.5 million chemical synapses
 
@@ -131,6 +137,7 @@ Columns:
 The 5,342,446 figure is a **download row count**, not automatically the number of unique graph edges.
 
 The first audit must compute separately:
+
 - unique neurons
 - unique `(pre_root_id, post_root_id)` pairs
 - total rows
@@ -166,6 +173,7 @@ Main analysis environment:
 **Kaggle Notebook**
 
 Reason:
+
 - the developer's local machine has limited RAM;
 - graph/data processing can run remotely;
 - CPU is sufficient for early analysis;
@@ -272,6 +280,7 @@ notebooks/00_dataset_audit.ipynb
 It must calculate:
 
 ### Basic
+
 - row count
 - columns
 - dtypes
@@ -279,6 +288,7 @@ It must calculate:
 - duplicate rows
 
 ### Graph structure
+
 - unique presynaptic neurons
 - unique postsynaptic neurons
 - unique neurons overall
@@ -286,6 +296,7 @@ It must calculate:
 - connection counts at several synapse thresholds
 
 ### Weights
+
 - sum
 - mean
 - median
@@ -295,21 +306,25 @@ It must calculate:
 - histogram
 
 ### Degree
+
 - in-degree
 - out-degree
 - weighted in-degree
 - weighted out-degree
 
 ### Directionality
+
 - reciprocal pair count
 - reciprocal fraction
 - self-loop count
 
 ### Metadata
+
 - neuropil counts
 - neurotransmitter counts
 
 Every metric must explicitly document whether it is based on:
+
 - raw rows;
 - unique neuron pairs; or
 - thresholded graph edges.
@@ -323,6 +338,7 @@ Use two levels.
 ### Exploratory analysis
 
 Allowed:
+
 - pandas
 - NumPy
 - NetworkX
@@ -334,6 +350,7 @@ NetworkX is suitable for small/medium subgraphs and graph exploration.
 Do not use a huge NetworkX object as the main million-edge simulation engine.
 
 Prefer:
+
 - SciPy sparse matrices
 - CSR/CSC
 - COO for construction when appropriate
@@ -343,6 +360,7 @@ Prefer:
 The representation is part of the performance problem.
 
 NVIDIA documents:
+
 - cuSPARSE for unstructured sparse operations;
 - cuSPARSELt for structured sparsity such as 2:4 on supported NVIDIA architectures.
 
@@ -369,6 +387,7 @@ FlyWire Sparse
 ```
 
 Measure:
+
 - accuracy
 - parameter count
 - estimated FLOPs/MACs
@@ -407,6 +426,7 @@ D = FlyWire Sparse
 ```
 
 Interpretation:
+
 - If D beats B but not C, the advantage may largely be degree structure.
 - If D beats C, specific topology becomes more interesting.
 
@@ -421,18 +441,21 @@ Question:
 > Can modular organization reduce unnecessary computation?
 
 Compare:
+
 - globally dense routing
 - generic modular routing
 - FlyWire-derived modules
 - randomized modules with matched sizes
 
 Potential tasks:
+
 - multitask classification
 - conditional computation
 - routing
 - mixture-of-experts-like workloads
 
 Measure:
+
 - active modules
 - operations per sample
 - latency
@@ -451,12 +474,14 @@ Important:
 Rich-club is an observed structural property, not proof of a computational advantage.
 
 Compare:
+
 - full topology
 - topology with high-degree hubs removed
 - randomized hub placement
 - degree-matched controls
 
 Measure:
+
 - path lengths
 - active edges
 - task accuracy
@@ -472,18 +497,21 @@ Question:
 > Does connectome-like recurrence help temporal memory?
 
 Compare:
+
 - feed-forward sparse
 - generic recurrent
 - FlyWire-derived recurrence
 - randomized recurrence with matched edge counts
 
 Potential tasks:
+
 - sequence classification
 - temporal prediction
 - short-term memory
 - control
 
 Measure:
+
 - sequence accuracy
 - latency
 - active states
@@ -517,6 +545,7 @@ Question:
 > Does event-driven sparse activity reduce actual computational work enough to outperform conventional dense computation on the target hardware?
 
 Potential platforms:
+
 - CPU
 - NVIDIA GPU
 - later, neuromorphic hardware if accessible
@@ -533,26 +562,33 @@ https://www.intel.com/content/www/us/en/research/neuromorphic-computing.html
 Start small.
 
 ### Stage A
+
 MNIST
 
 Purpose:
+
 - fast iteration
 - debugging
 - clean ablations
 
 ### Stage B
+
 Fashion-MNIST
 
 Purpose:
+
 - harder classification
 
 ### Stage C
+
 CIFAR-10
 
 Purpose:
+
 - test whether findings survive richer inputs
 
 Do not start with:
+
 - LLMs
 - giant Transformers
 - huge datasets
@@ -596,6 +632,7 @@ class/action
 ```
 
 The connectivity mask may be:
+
 - dense
 - random sparse
 - degree-matched
@@ -608,18 +645,23 @@ The connectivity mask may be:
 Important experiment:
 
 ### A
+
 FlyWire topology + trainable weights
 
 ### B
+
 FlyWire topology + fixed/random weights
 
 ### C
+
 Random topology + trainable weights
 
 ### D
+
 Degree-matched topology + trainable weights
 
 This helps distinguish:
+
 - topology effects
 - sparsity effects
 - learned-weight effects
@@ -641,6 +683,7 @@ automatically faster
 ```
 
 Sparse irregularity can introduce:
+
 - index overhead
 - non-contiguous memory access
 - poor hardware utilization
@@ -649,6 +692,7 @@ Sparse irregularity can introduce:
 - weak sparse-kernel support
 
 Therefore report both:
+
 - theoretical cost
 - measured performance
 
@@ -677,6 +721,7 @@ Sparse ANN                     ✓              ✓/depends
 ```
 
 Record for each benchmark:
+
 - exact hardware
 - software versions
 - precision
@@ -717,6 +762,7 @@ https://developer.nvidia.com/cusparse
 ## 16. Memory movement is a first-class metric
 
 Try to measure or estimate:
+
 - parameter bytes
 - activation bytes
 - sparse index bytes
@@ -747,6 +793,7 @@ Consolidated Cell Types
 Use it to map neuron IDs to official biological annotations.
 
 Purpose:
+
 - identify sensory populations
 - identify motor/descending populations where available
 - associate IDs with biological categories
@@ -766,12 +813,14 @@ https://www.nature.com/articles/s41586-024-07686-5
 Games are **demonstrations**, not the core scientific benchmark.
 
 Possible demos:
+
 - Guitar Hero-like timing task
 - Minecraft
 - Doom-like control
 - 2D navigation
 
 Use games to demonstrate:
+
 - sensory encoding
 - temporal processing
 - motor/readout mapping
@@ -800,6 +849,7 @@ readout
 ```
 
 Metrics:
+
 - hit rate
 - miss rate
 - timing error
@@ -809,6 +859,7 @@ Metrics:
 
 Important:
 The connectome does not intrinsically understand:
+
 - note color
 - keyboard keys
 - Guitar Hero rules
@@ -900,6 +951,7 @@ connectome-bench/
 ```
 
 The exact structure can evolve, but preserve logical separation between:
+
 - raw data
 - preprocessing
 - graph/topology
@@ -945,12 +997,14 @@ For latency:
 5. keep batch size explicit.
 
 For training:
+
 - fixed dataset split
 - fixed budget
 - fixed optimizer where comparison requires it
 - multiple seeds for important results
 
 For topology comparisons:
+
 - match node count where reasonable
 - match target sparsity when testing topology
 - match degree statistics when testing specific topology effects
@@ -988,6 +1042,7 @@ Uniform Random
 
 Goal:
 determine whether an observed result comes from:
+
 - generic sparsity
 - degree distribution
 - hubs
@@ -1005,6 +1060,7 @@ Keep these separate.
 ### Layer A — Biological data
 
 Real/reconstructed data:
+
 - FlyWire connectome
 - synapses
 - neuron IDs
@@ -1015,6 +1071,7 @@ Real/reconstructed data:
 ### Layer B — Computational abstraction
 
 Engineering choices:
+
 - sparse matrices
 - graph representations
 - SNNs
@@ -1026,6 +1083,7 @@ Engineering choices:
 ### Layer C — Engineering benchmark
 
 Measured implementation:
+
 - CPU
 - GPU
 - memory
@@ -1057,6 +1115,7 @@ Weak:
 > The model has fewer FLOPs, therefore it is faster.
 
 All final claims must state:
+
 - task
 - model
 - controls
@@ -1069,19 +1128,25 @@ All final claims must state:
 ## 27. Research roadmap
 
 ### Phase 0 — Dataset audit
+
 Output:
+
 ```text
 notebooks/00_dataset_audit.ipynb
 ```
 
 ### Phase 1 — Graph construction
+
 Output:
+
 ```text
 notebooks/01_graph_construction.ipynb
 ```
 
 ### Phase 2 — Topology analysis
+
 Measure:
+
 - sparsity
 - degree
 - reciprocity
@@ -1090,57 +1155,94 @@ Measure:
 - motifs
 
 Output:
+
 ```text
 notebooks/02_connectome_topology.ipynb
 ```
 
 ### Phase 3 — Cell types
+
 Output:
+
 ```text
 notebooks/03_cell_type_mapping.ipynb
 ```
 
 ### Phase 4 — Baselines
+
 Build:
+
 - dense
 - random sparse
 - degree-matched sparse
 
 Output:
+
 ```text
 notebooks/04_baselines.ipynb
 ```
 
 ### Phase 5 — Connectome architecture
+
 Output:
+
 ```text
 notebooks/05_connectome_sparse.ipynb
 ```
 
 ### Phase 6 — Ablations
+
 Output:
+
 ```text
 notebooks/06_ablation.ipynb
 ```
 
 ### Phase 7 — SNN
+
 Output:
+
 ```text
 notebooks/07_snn.ipynb
 ```
 
 ### Phase 8 — Hardware
+
 Output:
+
 ```text
 notebooks/08_hardware_benchmark.ipynb
 ```
 
 ### Phase 9 — Game/control demos
+
 Possible:
+
 - Guitar Hero-like task
 - Minecraft
 - Doom
 - navigation
+
+### Phase 10 — Connectome-Inspired Architecture Search
+After causal properties are isolated:
+- generate topology variants that preserve the useful property
+- benchmark variants against FlyWire and controls
+- identify Pareto-optimal architectures
+
+Prerequisite: at least one property must be causally validated in Phases 6–8.
+
+### Phase 11 — Hardware-Aware Optimization
+- optimize graph ordering, memory layout, and sparse format for target hardware
+- compare hardware-optimized variants against unmodified FlyWire
+- measure latency, throughput, memory, and energy
+
+### Phase 12 — Cross-Task Validation
+- test best variants on Fashion-MNIST, CIFAR-10, and temporal tasks
+- determine whether discovered properties generalize or are task-specific
+
+### Phase 13 — Application / Game Demonstrations
+Use validated, optimized architectures in closed-loop demos.
+This phase subsumes the earlier Phase 9 game concepts but uses architectures that have survived the full discovery-optimization pipeline.
 
 ---
 
@@ -1163,6 +1265,7 @@ Do not train a model before this is complete:
 ```
 
 After that:
+
 1. define graph representation;
 2. run topology analysis;
 3. create fair sparse controls;
@@ -1173,39 +1276,51 @@ After that:
 ## 29. Agent operating rules
 
 ### Scope
+
 Modify only files necessary for the current task.
 
 ### Preservation
+
 Do not rewrite working modules wholesale when a focused change is enough.
 
 ### Data safety
+
 Never overwrite raw datasets.
 
 ### Dataset integrity
+
 Never silently change dataset versions.
 
 ### Scientific integrity
+
 Never turn a hypothesis into a conclusion without measurement.
 
 ### Schema integrity
+
 Inspect actual data columns before writing processing code.
 
 ### API integrity
+
 Verify current FlyWire/Codex documentation before depending on API endpoints.
 
 ### Performance
+
 Profile before optimizing.
 
 ### Benchmark integrity
+
 Use identical conditions for compared models unless the experiment explicitly tests a changed condition.
 
 ### Error handling
+
 If schema, dataset version, or API behavior differs from expectations, stop and inspect rather than guessing.
 
 ### Reproducibility
+
 Save configurations and results.
 
 ### Minimal privilege / minimal scope
+
 An agent should not download massive data, alter infrastructure, or modify unrelated modules unless explicitly required by the current experiment.
 
 ---
@@ -1250,6 +1365,7 @@ produce reproducible topology statistics
 ```
 
 Do NOT start with:
+
 - game integration
 - giant neural simulations
 - massive downloads
@@ -1257,3 +1373,321 @@ Do NOT start with:
 - model training before the dataset audit
 
 The purpose of the first stage is to establish a trustworthy quantitative description of the real FlyWire data that will serve as the foundation for every later experiment.
+
+---
+
+## 32. Connectome-Inspired Architecture Search
+
+The project does not require literally copying the FlyWire connectome into every model.
+
+The FlyWire connectome may be used as:
+
+- source of hypotheses;
+- biological baseline;
+- source of topological properties;
+- structural constraint;
+- discovery space;
+- starting point for optimization.
+
+Conceptual pipeline:
+
+```text
+BIOLOGY (FlyWire FAFB v783)
+    ↓
+observation of a structural property
+    ↓
+computational hypothesis
+    ↓
+controlled experiment / ablation
+    ↓
+isolation of the causal property
+    ↓
+computational abstraction
+    ↓
+variant generation and optimization
+    ↓
+hardware co-design
+    ↓
+validation on additional tasks
+```
+
+The final architecture may differ from the original connectome.
+
+This does NOT mean abandoning the FlyWire baseline. FlyWire remains:
+- the biological reference;
+- the origin of every hypothesis;
+- a mandatory comparison target.
+
+It means the project acknowledges that biology solved its optimization problem under biological constraints (energy, volume, development, evolution). Engineering constraints (GPU utilization, memory bandwidth, kernel efficiency, structured sparsity) are different. The biological optimum and the engineering optimum may not coincide.
+
+---
+
+## 33. Architecture naming taxonomy
+
+Three levels of architectures must be distinguished.
+
+### Level A — Biological Baseline
+
+The unmodified FlyWire topology.
+
+Example:
+```text
+FlyWire
+```
+
+### Level B — Scientific Controls
+
+Graphs used to isolate the effect of specific properties.
+
+Examples:
+```text
+Random Sparse
+Degree-Matched
+Block Sparse
+Reciprocity-Removed
+Hub-Removed
+```
+
+### Level C — Engineered Variants
+
+Topologies derived from FlyWire insights but intentionally modified.
+
+Examples:
+```text
+FlyInspired-v1
+FlyInspired-v2
+HardwareOptimized-v1
+```
+
+Naming rule:
+
+Once a topology has been intentionally modified from the original FlyWire graph, it MUST NOT continue to be called "FlyWire." It must receive a new name that identifies:
+
+- parent architecture;
+- modifications performed;
+- constraints preserved;
+- objective;
+- seed;
+- task;
+- hardware;
+- results.
+
+Example lineage:
+
+```text
+FlyWire
+  ↓
+FlyInspired-v1  (preserved degree distribution, rewired long-range edges)
+  ↓
+FlyInspired-v2  (optimized hub placement for T4 GPU)
+  ↓
+HardwareOptimized-v1  (CSR-reordered for memory locality)
+```
+
+---
+
+## 34. Optimizable properties
+
+After a property of the connectome demonstrates experimental value, the project may attempt to find an improved version of that property.
+
+Conceptual flow:
+
+```text
+FlyWire
+   ↓
+discover useful property
+   ↓
+model mathematically
+   ↓
+generate variants
+   ↓
+benchmark variants
+   ↓
+optimize
+   ↓
+compare with FlyWire original
+```
+
+If a variant outperforms the original FlyWire, this is NOT a failure. It means the connectome was successfully used as a source of discovery.
+
+The following are candidate properties for future investigation. None of these are confirmed to be useful; each requires its own experimental validation.
+
+### Degree Distribution
+
+Investigate:
+- mean degree
+- degree variance
+- heterogeneity
+- maximum degree
+- hub distribution
+
+Generate artificial distributions and compare.
+
+IMPORTANT: Do not automatically call the distribution "power-law." Use "heavy-tailed" or "highly heterogeneous" until a proper statistical fit (e.g., Clauset et al. methodology) confirms the functional form.
+
+### Hubs / Rich-Club
+
+Possibilities:
+- number of hubs
+- hub strength
+- hub placement
+- pruning low-degree nodes
+- hub constraints
+
+### Graph Ordering
+
+Keep the exact same topology but test:
+- node ordering
+- edge ordering
+- CSR index ordering
+- community-based clustering
+- memory locality optimization
+
+Objective: determine whether the same mathematical graph can execute with lower cost when represented differently in memory.
+
+### Topology Rewiring
+
+Test:
+- edge addition
+- edge removal
+- rewiring
+- degree-preserving rewiring
+- modularity-preserving rewiring
+- motif-preserving rewiring
+
+### Hardware-Aware Topology
+
+Test constraints related to:
+- block structure
+- alignment
+- sparse format compatibility
+- memory access patterns
+- GPU kernel behavior
+- structured sparsity (e.g., 2:4)
+
+---
+
+## 35. Causal evidence rules for properties
+
+If a property of the FlyWire connectome is associated with better performance, this does NOT automatically mean that property caused the improvement.
+
+Required evidence chain:
+
+```text
+observation
+    ↓
+hypothesis
+    ↓
+controlled experiment
+    ↓
+profiling / ablation
+    ↓
+causal evidence
+    ↓
+optimization
+```
+
+Language rules:
+
+Do NOT write:
+> "The degree distribution improves GPU performance."
+
+Write initially:
+> "The degree distribution is associated with the observed performance pattern."
+
+Only after profiling and controls:
+> "The analysis suggests that property X contributes causally to outcome Y, based on [specific evidence]."
+
+Connection to existing results:
+
+The Phase 6–6.2 experiments (FlyWire vs Random Sparse vs Degree-Matched) are an example of why this framework exists. The observed differences in convergence dynamics and execution time motivate the question: "Which specific property is responsible?" The answer requires the causal chain above, not assumption.
+
+When a property appears relevant, the next questions are:
+1. Can we reproduce this property independently of the full connectome?
+2. Can we modify it?
+3. Can we find a version better suited to the target hardware?
+
+Do not alter the numerical results already documented in the notes/ directory.
+
+---
+
+## 36. Multi-objective evaluation
+
+Engineered variants may be evaluated simultaneously on:
+
+- task performance (accuracy, loss)
+- latency
+- memory (peak RAM, peak VRAM)
+- compute (FLOPs/MACs)
+- throughput (samples/second)
+- energy (when measurable)
+
+A composite score function may be used internally:
+
+```text
+score =
+    task_performance
+    − λ × latency
+    − β × memory
+    − γ × compute
+    − δ × energy
+```
+
+Rules:
+
+1. NEVER hide individual metrics behind a composite score.
+2. Always report each metric separately.
+3. When possible, analyze the Pareto frontier across objectives.
+4. Document the weights (λ, β, γ, δ) used if a composite score is reported.
+
+---
+
+## 37. Discovery vs Optimization
+
+The project has two distinct stages. Do not conflate them.
+
+### Stage: DISCOVERY
+
+Question:
+> "Which property of the connectome appears computationally useful?"
+
+Methods:
+- controlled comparison (FlyWire vs Random vs Degree-Matched vs ablated variants)
+- profiling
+- ablation
+
+Output:
+- identified candidate property
+- causal evidence level
+
+### Stage: OPTIMIZATION
+
+Question:
+> "What version of this property produces the best trade-off between task performance and hardware efficiency?"
+
+Methods (future, not implemented now):
+- random search
+- grid search
+- Bayesian optimization
+- evolutionary search
+- graph rewiring
+- constrained optimization
+- hardware-aware architecture search
+
+Output:
+- optimized variant
+- comparison with FlyWire original
+- Pareto analysis
+
+IMPORTANT: The Optimization stage does NOT begin until at least one property has been validated in the Discovery stage. The current project is still in the Discovery stage.
+
+The new research direction does NOT interrupt or replace:
+- Phase 6.3 (causal investigation)
+- profiling
+- convergence analysis
+- statistical testing
+- index-ordering controls
+- Block Sparse comparisons
+- ongoing hardware benchmarks
+
+These must be completed first.
