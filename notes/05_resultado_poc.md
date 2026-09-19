@@ -34,7 +34,18 @@ Logo em seguida, subimos a complexidade visual trocando dígitos numéricos por 
 
 A queda inicial de acurácia era totalmente esperada pela maior complexidade visual, mas a curva de aprendizado acelerada prova que o cérebro da mosca não apenas decora formas simples, mas generaliza o aprendizado de extração de bordas e texturas em imagens 2D usando a topologia de pequenos mundos.
 
-## Conclusão da Prova de Conceito
+### Teste Extremo: CIFAR-10 (Imagens Coloridas de Objetos e Animais)
+Para levar a topologia ao limite, substituímos as imagens em preto e branco por imagens coloridas de 3 canais (RGB), totalizando **3072 pixels** de entrada conectados aos sensores. O treinamento foi estendido para 10 épocas.
+
+| Época | Tempo (s) | Loss   | Acurácia |
+|-------|-----------|--------|----------|
+| 1/10  | 5.6s      | 2.3839 | 11.50%   |
+| 5/10  | 4.6s      | 1.9871 | 22.70%   |
+| **10/10** | **4.6s**  | **1.9213** | **26.30%** |
+
+**Análise do CIFAR-10:** O desempenho caiu drasticamente para a faixa dos 26% (ainda 2.5x melhor que a chance aleatória de 10%). Este é um achado científico riquíssimo: a mosca não tem uma "retina convolucional" (CNN) mapeada diretamente aqui. Jogar pixels RGB puros num grafo estático sem pré-processamento estruturado demonstra o limite da capacidade inata da rede em extrair hierarquia espacial profunda sem os devidos núcleos ópticos.
+
+## Conclusão Final da Prova de Conceito
 A rede foi capaz de utilizar a topologia puramente biológica da *Drosophila melanogaster* para retropropagar erros (backpropagation) e aprender o padrão visual humano dos dígitos numéricos do MNIST.
 
 **O que foi realizado e superado de fato nesta etapa:**
