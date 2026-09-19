@@ -68,17 +68,19 @@ Vamos reconstruir rapidamente a matriz CSR e recalcular os Hubs para descobrir q
 nb.cells.append(nbf.v4.new_code_cell("""CONNECTIONS_PATH = "../data/raw/connections_princeton.csv.gz"
 
 print("Reconstruindo Grafo Esparso...")
-mapper = NodeMapper()
-mapper.fit(CONNECTIONS_PATH)
+import pandas as pd
+df = pd.read_csv(CONNECTIONS_PATH)
+builder = ConnectomeBuilder(df)
 
-builder = ConnectomeBuilder(mapper)
-adj_csr = builder.build_csr(CONNECTIONS_PATH, weight_col='syn_count')
+
+
+adj_csr, mapper = builder.build_sparse_matrix(weight_col='syn_count')
 
 # Criando matriz binarizada para contagem de conexões únicas (degree puro)
 adj_bin_csr = adj_csr.copy()
 adj_bin_csr.data = np.ones_like(adj_bin_csr.data)
 
-print(f"Nodos no grafo: {mapper.n_nodes:,}")
+print(f"Nodos no grafo: {mapper.num_nodes:,}")
 """))
 
 nb.cells.append(nbf.v4.new_markdown_cell("""## 3. Cobertura do Mapeamento Biológico
@@ -86,17 +88,17 @@ Quantos dos nossos neurônios do Grafo (Fase 1) realmente possuem um nome na tab
 """))
 
 nb.cells.append(nbf.v4.new_code_cell("""# Lista de todos os IDs reais usados no grafo
-all_real_ids = [mapper.id_to_root(i) for i in range(mapper.n_nodes)]
+all_real_ids = [mapper.get_root_id(i) for i in range(mapper.num_nodes)]
 
 # Buscando os tipos para todos
 all_types = cell_mapper.get_types_batch(all_real_ids)
 
 # Contando quantos ficaram 'Unknown'
 n_unknown = all_types.count("Unknown")
-n_mapped = mapper.n_nodes - n_unknown
+n_mapped = mapper.num_nodes - n_unknown
 
-print(f"Neurônios mapeados: {n_mapped:,} ({n_mapped/mapper.n_nodes:.2%})")
-print(f"Neurônios desconhecidos (Unknown): {n_unknown:,} ({n_unknown/mapper.n_nodes:.2%})")
+print(f"Neurônios mapeados: {n_mapped:,} ({n_mapped/mapper.num_nodes:.2%})")
+print(f"Neurônios desconhecidos (Unknown): {n_unknown:,} ({n_unknown/mapper.num_nodes:.2%})")
 
 # Nota: Muitos neurônios podem ser pequenos fragmentos na reconstrução 3D que não ganharam classificação.
 """))
@@ -113,13 +115,13 @@ out_hubs_idx, out_hubs_val = find_hubs(out_deg, top_k)
 
 print("### TOP 15 HUBS DE RECEPÇÃO (In-Degree) ###")
 for rank, (idx, val) in enumerate(zip(in_hubs_idx, in_hubs_val)):
-    real_id = mapper.id_to_root(idx)
+    real_id = mapper.get_root_id(idx)
     bio_type = cell_mapper.get_type(real_id)
     print(f"{rank+1:02d}. [Entradas: {val:>5,}] Tipo: {bio_type:<15} (ID: {real_id})")
 
 print("\\n### TOP 15 HUBS DE TRANSMISSÃO (Out-Degree) ###")
 for rank, (idx, val) in enumerate(zip(out_hubs_idx, out_hubs_val)):
-    real_id = mapper.id_to_root(idx)
+    real_id = mapper.get_root_id(idx)
     bio_type = cell_mapper.get_type(real_id)
     print(f"{rank+1:02d}. [Saídas: {val:>5,}] Tipo: {bio_type:<15} (ID: {real_id})")
 """))

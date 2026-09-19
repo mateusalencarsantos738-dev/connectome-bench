@@ -41,18 +41,20 @@ nb.cells.append(nbf.v4.new_markdown_cell("""## 1. Carregando a Rede Biológica R
 nb.cells.append(nbf.v4.new_code_cell("""CONNECTIONS_PATH = "../data/raw/connections_princeton.csv.gz"
 
 print("1. Lendo mapeamento e criando Grafo Base (FlyWire)...")
-mapper = NodeMapper()
-mapper.fit(CONNECTIONS_PATH)
+import pandas as pd
+df = pd.read_csv(CONNECTIONS_PATH)
+builder = ConnectomeBuilder(df)
 
-builder = ConnectomeBuilder(mapper)
+
+
 # Usaremos uma versão puramente estrutural (binária) para métricas de grau
-adj_real = builder.build_csr(CONNECTIONS_PATH, weight_col='syn_count')
+adj_real, mapper = builder.build_sparse_matrix(weight_col='syn_count')
 adj_real.data = np.ones_like(adj_real.data)
 
 real_density = 1.0 - calculate_sparsity(adj_real)
 real_in_deg, real_out_deg = get_degrees(adj_real)
 
-print(f"Nodos: {mapper.n_nodes:,}")
+print(f"Nodos: {mapper.num_nodes:,}")
 print(f"Arestas (Únicas): {adj_real.nnz:,}")
 print(f"Densidade: {real_density:.6%}")
 """))
@@ -63,7 +65,7 @@ Tem a mesma densidade, mas nenhuma organização biológica.
 
 nb.cells.append(nbf.v4.new_code_cell("""print("2. Gerando Rede Aleatória...")
 start = time.time()
-adj_random = generate_random_sparse(mapper.n_nodes, density=real_density, seed=42)
+adj_random = generate_random_sparse(mapper.num_nodes, density=real_density, seed=42)
 end = time.time()
 
 print(f"Tempo de geração: {end - start:.2f}s")

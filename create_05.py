@@ -41,15 +41,17 @@ nb.cells.append(nbf.v4.new_code_cell("""CONNECTIONS_PATH = "../data/raw/connecti
 CELL_TYPES_PATH = "../data/raw/consolidated_cell_types.csv.gz"
 
 print("Construindo matriz de conectividade...")
-mapper = NodeMapper()
-mapper.fit(CONNECTIONS_PATH)
-builder = ConnectomeBuilder(mapper)
+import pandas as pd
+df = pd.read_csv(CONNECTIONS_PATH)
+builder = ConnectomeBuilder(df)
+
+
 
 # Usaremos a matriz binarizada por enquanto
-adj_real = builder.build_csr(CONNECTIONS_PATH, weight_col='syn_count')
+adj_real, mapper = builder.build_sparse_matrix(weight_col='syn_count')
 adj_real.data = np.ones_like(adj_real.data)
 
-print(f"Grafo carregado com {mapper.n_nodes:,} nós e {adj_real.nnz:,} arestas.")
+print(f"Grafo carregado com {mapper.num_nodes:,} nós e {adj_real.nnz:,} arestas.")
 """))
 
 nb.cells.append(nbf.v4.new_markdown_cell("""## 2. Identificando Canais Biológicos (Sensores e Motores)
@@ -68,8 +70,8 @@ motor_indices = []
 # se não encontrarmos Sensory/Motor diretos, ou pegaremos uma amostra arbitrária 
 # apenas para demonstrar a engenharia de entrada/saída.
 
-for i in range(mapper.n_nodes):
-    real_id = mapper.id_to_root(i)
+for i in range(mapper.num_nodes):
+    real_id = mapper.get_root_id(i)
     bio_type = cell_mapper.get_type(real_id).lower()
     
     # Heurística simplificada de busca
@@ -119,7 +121,7 @@ nb.cells.append(nbf.v4.new_markdown_cell("""## 4. Construindo e Treinando a Inte
 nb.cells.append(nbf.v4.new_code_cell("""print("Construindo o modelo ConnectomeModel...")
 model = ConnectomeModel(
     input_dim=784,
-    hidden_dim=mapper.n_nodes,
+    hidden_dim=mapper.num_nodes,
     output_dim=10,
     adj_mask=adj_real,
     sensory_indices=sensory_indices,
