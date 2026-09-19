@@ -14,7 +14,7 @@
 | Random Sparse | 3.732.460 | 26.93 | **51** | **26.99** |
 | Degree-Matched | 3.722.484 | 26.86 | **5.825** | **3.527** |
 
-**Achado imediato:** O Random tem `Max Degree = 51` e `Var Degree = 26.99`. Isso é quase uma distribuição Poisson, sem hubs. O FlyWire e o Degree-Matched possuem `Max Degree > 5.000` e variância de grau ~3.500, indicando uma distribuição *power-law* — poucos neurônios com milhares de conexões, muitos com poucas. Esse é o dado estrutural que precisávamos para começar a explicar os tempos.
+**Achado imediato:** O Random tem `Max Degree = 51` e `Var Degree = 26.99`. Isso é característico de uma distribuição homogênea (compatível com Poisson), sem hubs relevantes. O FlyWire e o Degree-Matched possuem `Max Degree > 5.000` e variância de grau ~3.500, indicando uma distribuição de grau **altamente heterogênea (heavy-tailed)** — poucos neurônios com milhares de conexões, muitos com poucas. Esse é o dado estrutural que precisávamos para começar a levantar hipóteses sobre os tempos. A confirmação de que é especificamente power-law requer ajuste formal de distribuição.
 
 ---
 
@@ -28,31 +28,65 @@
 
 ---
 
-## Análise Científica Controlada
+## Análise Científica
 
-### Achado 1: A diferença de acurácia é real
-Com 10.000 imagens e 3 seeds, o Random Sparse tem 98.36% ± 0.21% enquanto FlyWire e DegMatched ficam em ~97.5% ± 0.35%. As faixas de erro **não se sobrepõem**, confirmando que o ganho de ~0.8 p.p. para o Random não é ruído experimental.
+### Achado 1: Reprodutibilidade confirmada, mas significância estatística ainda incompleta
 
-**Hipótese defensável:** Para classificação *feedforward* estática no MNIST, redes com distribuição de grau uniforme (tipo Poisson) aprendem levemente melhor do que redes com distribuição *power-law*, nessas condições de treinamento.
+Nas três seeds avaliadas, Random Sparse apresentou maior acurácia média em todas as rodadas. A magnitude do efeito é de aproximadamente **0.84 ponto percentual** em relação ao FlyWire.
 
-### Achado 2: FlyWire e Degree-Matched têm tempo idêntico — o Random é o outlier
-Os tempos por época:
-- FlyWire: **33.67s ± 0.02s**
-- DegMatched: **33.77s ± 0.01s** → Praticamente idêntico ao FlyWire
-- Random: **39.90s ± 0.00s** → ~18.5% mais lento, com desvio padrão zero (extremamente estável)
+Entretanto, três seeds ainda são insuficientes para tratar essa diferença como evidência estatística definitiva. A ausência de sobreposição dos desvios-padrão não constitui, por si só, um teste estatístico de significância. Uma análise com mais seeds (5–10) e teste estatístico apropriado (t-test ou Wilcoxon) será necessária na Fase 6.2.
 
-O dado crítico: FlyWire e DegMatched emparam em tempo apesar de não preservar a mesma topologia biológica. O que os dois têm em comum? A distribuição de grau *power-law* (Max Degree > 5.000, Var > 3.500). O Random tem distribuição Poisson (Max Degree = 51, Var ≈ 27) e é o único mais lento.
+**Redação defensável:** *"Os resultados reproduzem consistentemente maior acurácia para Random Sparse nas três seeds avaliadas, com diferença de ~0.84 p.p. em relação ao FlyWire. Essa diferença necessita de mais repetições e teste estatístico antes de ser tratada como confirmada."*
 
-**Hipótese operacional para Fase 8:** A distribuição de grau *power-law* (e não a biologia específica) gera um padrão de esparsidade que é favorável ao hardware nessa implementação. Isso pode ser devido à ordenação dos índices CSR, coalescência de memória, ocupação do kernel, ou outra causa — exige profiling para confirmar.
+### Achado 2: FlyWire e Degree-Matched têm custo de execução praticamente idêntico
 
-### O que ainda não provamos
-- A causa exata do ganho de tempo (~18%) não foi isolada (não fizemos profiling de kernel CUDA).
-- Não testamos Block Sparse ou formatos estruturados para referência.
-- Com apenas 5 épocas, as redes podem não ter convergido completamente; o gap poderia diminuir com mais épocas.
+FlyWire: **33.67s ± 0.02s** | Degree-Matched: **33.77s ± 0.01s** | Random Sparse: **39.90s ± 0.00s**
+
+O dado mais importante: apesar de FlyWire e Degree-Matched não compartilharem a mesma conectividade específica, seus tempos são quase idênticos. O único diferente é o Random Sparse — e ele é o único com distribuição de grau homogênea (Max Degree = 51, Var ≈ 27). FlyWire e Degree-Matched possuem grau altamente heterogêneo (Max Degree > 5.000, Var > 3.500).
+
+**Hipótese operacional:** Propriedades estatísticas do padrão de grau podem influenciar fortemente o comportamento computacional dessa implementação, independentemente da topologia biológica específica. Isso ainda é hipótese — a causa exata (distribuição do `row_ptr` no CSR, ocupação de kernel, coalescência de memória) precisa de profiling para ser isolada.
+
+### Ponto de atenção: Distribuição de grau não confirmada como power-law
+
+Escrever "distribuição power-law" com base apenas em Max Degree elevado e variância alta é prematuro. Pode ser heavy-tailed, log-normal, power-law truncada ou outra distribuição assimétrica. A terminologia correta, antes de ajuste formal de distribuição, é **"distribuição de grau altamente heterogênea"** ou **"heavy-tailed"**.
+
+### Inconsistência de arestas — Degree-Matched
+
+```
+FlyWire       3.732.460 arestas
+Random        3.732.460 arestas
+Degree-Match  3.722.484 arestas  (diferença: 9.976 ≈ 0.267%)
+```
+
+Essa diferença precisa ser explicada. Causas prováveis no Configuration Model:
+- Self-loops removidos na conversão para CSR binário.
+- Duplicatas colapsadas ao binarizar a matriz COO.
+- Impossibilidade de matching exato com alguns stubs.
+
+Não é grave, mas deve ser documentado no código e controlado nos próximos experimentos.
 
 ---
 
-## Próximos Passos
-1. **Fase 8 na RTX local:** Medir com `torch.cuda.Event` a latência real por batch e não por época. Investigar se o kernel do CSR se comporta diferente com distribuição Poisson vs *power-law*.
-2. **Controle de convergência:** Rodar até convergência completa (ex: 20+ épocas) para verificar se o gap de 0.8% persiste ou é apenas velocidade de convergência.
-3. **Block Sparse como baseline de hardware:** Adicionar o experimento E sugerido anteriormente.
+## Próximos Passos — Roadmap Revisado
+
+```
+6.1  Replicação (concluído) ✓
+  ↓
+6.2  Convergência: curvas de 5/10/20/30 épocas + mais seeds
+  ↓
+6.3  Profiling CUDA: latência por batch (forward/backward/optimizer), ocupação de kernel
+  ↓
+6.4  Controle de Ordenação: FlyWire com IDs permutados aleatoriamente (isolamento de localidade)
+  ↓
+6.5  Block Sparse: baseline de esparsidade estruturada para hardware
+  ↓
+6.6  Ablação de Hubs: remover top-k hubs do FlyWire e medir impacto no tempo
+  ↓
+7.   SNN / Event-Driven
+  ↓
+8.   Hardware Benchmark (RTX local)
+  ↓
+9.   Game Demo (Guitar Hero)
+```
+
+**Pergunta central reformulada:** Não mais *"O conectoma é mais eficiente?"*, mas sim *"Quais propriedades estatísticas do conectoma são responsáveis pelo comportamento computacional observado?"*

@@ -66,13 +66,35 @@ def generate_degree_matched(in_degrees: np.ndarray, out_degrees: np.ndarray, see
     # ou auto-conexões (A -> A).
     # Ao criar uma matriz COO e usar .data = 1, matamos conexões múltiplas (viram 1),
     # mas preservamos a esparsidade brutal e os graus muito próximos aos originais.
-    data = np.ones(len(source_stubs), dtype=np.int8)
+    n_stubs = len(source_stubs)
+    
+    # Contar self-loops antes da conversão
+    n_self_loops = int(np.sum(source_stubs == target_stubs))
+    
+    data = np.ones(n_stubs, dtype=np.int8)
     
     coo = sp.coo_matrix((data, (source_stubs, target_stubs)), shape=(n_nodes, n_nodes))
     
     # Converte para CSR. Se houverem arestas duplicadas, os valores de "data" se somariam.
     # Vamos forçar novamente a binarização para estrita validade matemática.
-    csr = coo.tocsr()
-    csr.data = np.ones_like(csr.data)
+    csr_raw = coo.tocsr()
+    n_before_binarize = csr_raw.nnz
     
-    return csr
+    csr_raw.data = np.ones_like(csr_raw.data)
+    n_after_binarize = csr_raw.nnz
+    
+    n_duplicates = n_stubs - n_before_binarize
+    n_merged = n_before_binarize - n_after_binarize  # normalmente 0 após binarização CSR
+    
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(
+        f"generate_degree_matched: stubs={n_stubs:,} | "
+        f"self_loops={n_self_loops:,} | "
+        f"duplicatas_colapsadas={n_duplicates:,} | "
+        f"arestas_finais={n_after_binarize:,} | "
+        f"perda_total={n_stubs - n_after_binarize:,} ({100*(n_stubs - n_after_binarize)/n_stubs:.3f}%)"
+    )
+    
+    return csr_raw
+
