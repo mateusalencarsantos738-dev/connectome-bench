@@ -2,7 +2,7 @@
 
 **Data:** 19 de Setembro de 2026
 **Dataset:** MNIST — 10.000 imagens, 5 épocas, **10 seeds fixas** (10, 20, ..., 100)
-**Hardware:** Kaggle GPU T4x2
+**Hardware:** Kaggle GPU T4x2 (verificar com `torch.cuda.device_count()` se 1 ou 2 GPUs foram efetivamente utilizadas — o código não usa DataParallel, portanto provavelmente apenas 1 T4 estava ativa)
 
 ---
 
@@ -42,28 +42,36 @@ A perda de 9.976 arestas (0.267%) é explicada pelo Configuration Model: ao gera
 
 Este é o resultado mais rico da fase. A ordenação de desempenho **inverte** ao longo do treinamento:
 
+| Época | Random − FlyWire | Degree-Matched − FlyWire |
+|---|---|---|
+| 1 | **−1.20 p.p.** | **+1.25 p.p.** |
+| 2 | +0.02 p.p. | +0.52 p.p. |
+| 3 | +0.52 p.p. | +0.42 p.p. |
+| 4 | +0.62 p.p. | +0.30 p.p. |
+| 5 | **+0.87 p.p.** | +0.25 p.p. |
+
 **Época 1:** DegMatched (84.76%) > FlyWire (83.51%) > **Random (82.31%)**
 **Época 2:** Todas convergem para a faixa 94.4–94.9% (praticamente indistinguíveis)
 **Época 5:** **Random (98.24%)** > DegMatched (97.62%) > FlyWire (97.37%)
 
-Isso significa que o Random Sparse começa **mais devagar** e **termina mais rápido**. DegMatched começa **mais rápido** e **termina no meio**. FlyWire fica consistentemente entre os dois nas épocas intermediárias.
+O Random não é simplesmente "melhor". Ele tem uma **dinâmica de treinamento diferente**: começa mais devagar e termina mais alto. DegMatched e FlyWire (ambos com distribuição de grau heavy-tailed) têm padrão oposto.
 
-**Hipóteses para o cruzamento (não confirmadas — precisam de profiling de gradiente):**
+**Pergunta que emerge:** Por que determinadas topologias aprendem mais rápido no início, enquanto outras obtêm maior desempenho final?
 
-1. Redes com distribuição de grau heavy-tailed possuem hubs de alta conectividade. Esses hubs podem capturar sinal rapidamente na época 1 (aceleração inicial), mas conforme o treinamento avança, os gradientes que passam pelos hubs podem saturar ou criar gargalos de fluxo de informação, limitando o refinamento tardio.
+**O que os dados NÃO demonstram ainda:** As explicações causais (saturação de hubs, fluxo de gradiente, suavidade do espaço de otimização) são hipóteses plausíveis mas sem suporte experimental neste momento. Para testá-las, precisamos medir norma de gradiente por época, ativação média e variância dos pesos — o que será feito na Fase 6.3C.
 
-2. Redes homogêneas (Random, distribuição quasi-Poisson) têm gradiente distribuído mais uniformemente por todos os pesos. A convergência inicial é mais lenta pois nenhum nó domina, mas o espaço de otimização é mais suave para refinamentos tardios.
+### Significância estatística (pendente de teste formal)
 
-### Significância estatística (ainda provisória)
+Com 10 seeds usando as **mesmas seeds em cada arquitetura**, o design experimental permite **t-test pareado** e **Wilcoxon signed-rank**, aproveitando o pareamento seed-a-seed.
 
-Com 10 seeds, os intervalos de ±1 std:
+Intervalos de ±1 std (descritivos, não são IC 95%):
 - Random: [97.96%, 98.52%]
 - DegMatched: [97.18%, 98.06%]
 - FlyWire: [97.02%, 97.72%]
 
-Os intervalos de Random e DegMatched se **sobrepõem parcialmente** (97.96 vs 98.06). Um t-test de duas amostras entre Random e DegMatched seria necessário para afirmar diferença estatisticamente significativa na época 5. Random vs FlyWire tem sobreposição menor e provavelmente seria significativo.
+Random e DegMatched têm sobreposição marginal. Para as 3 comparações (FlyWire vs Random, FlyWire vs DegMatched, Random vs DegMatched), aplicar correção Holm para múltiplos testes.
 
-**Redação defensável:** *"Com 10 seeds, o padrão de Random Sparse terminando com maior acurácia foi consistente em todas as rodadas. Um t-test será necessário para confirmar significância, especialmente entre Random e DegMatched, cujos intervalos de ±1 std apresentam sobreposição marginal."*
+**Não usar a expressão "confirmado estatisticamente" até executar esses testes.** Os resultados são *consistentes em 10 seeds*, mas isso ainda não é equivalente a um teste de significância formal.
 
 ### O que esta fase não responde
 
