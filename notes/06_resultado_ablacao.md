@@ -12,22 +12,25 @@
 | 2. Random Sparse (Erdős-Rényi) | 8.5s | **97.60%** | **0.0724** |
 | 3. Degree-Matched (Preserva Hubs) | 7.4s | **97.55%** | **0.0675** |
 
-## Análise do Laboratório (O Famoso "Resultado Negativo")
+## Análise Preliminar do Laboratório
 
-Temos aqui um dos resultados científicos mais fascinantes e valiosos do projeto! **O Cérebro Biológico perdeu (por uma margem minúscula) para um Cérebro Aleatório!**
+Os dados apresentam diferenças mínimas de desempenho e apontam para fenômenos que requerem investigação estruturada.
 
-Por que isso aconteceu e por que é uma ótima notícia científica?
+1. **Acurácia Sem Vantagem Biológica Direta:**
+   No experimento realizado, a topologia FlyWire não apresentou vantagem de acurácia sobre os controles Random Sparse e Degree-Matched no MNIST. Com 96.95% vs ~97.60%, os dados sugerem que (nessas condições específicas de apenas 2000 imagens) a evolução biológica não fornece vantagens para a classificação estática *feedforward* usando nossa implementação `MaskedLinear`.
 
-1. **A Restrição do Crânio Físico vs A Liberdade Matemática:**
-   Um Grafo Aleatório (Controle 2) conecta neurônios sem se importar com a distância física. Isso gera um "Mundo Pequeno Perfeito", onde a informação viaja super rápido de ponta a ponta. Já o cérebro da mosca (FlyWire) tem um "custo de fiação": ele precisa caber dentro de uma cabeça real. Isso gera "Módulos" isolados. Se a imagem cair no módulo errado, ela demora a sair.
+2. **O Mistério do Tempo de Execução e a Pista do Degree-Matched:**
+   O FlyWire e o Degree-Matched completaram cada época em ~7.3s, enquanto o Random Sparse levou 8.5s. A implementação FlyWire foi ~14% mais rápida que a Random Sparse neste benchmark inicial.
+   Isso sugere uma hipótese valiosíssima: o ganho de velocidade **pode não vir da topologia biológica completa**, mas sim da preservação da *distribuição de graus* e de como isso afeta a estrutura de armazenamento esparso. O `Degree-Matched` tem a mesma quantidade de "super-hubs" e "nós isolados" que o FlyWire. 
 
-2. **O Mito da Supremacia Biológica:**
-   Como dita o nosso manifesto do projeto: *"Não assuma que o cérebro é melhor. Meça!"*. Nós acabamos de provar que para uma tarefa genérica de reconhecimento de padrões estáticos (como ver um número isolado numa tela), a evolução biológica não fornece nenhuma vantagem sobre uma rede matemática pura desenhada aleatoriamente com a mesma densidade de fios.
+3. **Restrições Anatômicas vs Estrutura Aleatória:**
+   A topologia FlyWire possui restrições e organização espacial que podem produzir padrões de computação diferentes dos controles aleatórios. Como apontado pelos autores do mapeamento do FlyWire (Nature), o conectoma possui um rico "rich-club" e hubs inter-lobulares que afetam radicalmente o caminho das informações, diferente do que um modelo Erdős-Rényi faz de forma homogênea.
 
-3. **A Pista Oculta (O Tempo):**
-   Olhe para o Tempo de Época na tabela! O Cérebro Biológico e o Degree-Matched rodaram a **7.3s**, enquanto o Cérebro Aleatório rodou a **8.5s**. O Aleatório foi **16% mais lento** na placa de vídeo para calcular! Por quê? Porque a aleatoriedade destrói a "Localidade de Memória" (Cache da GPU). A biologia tem módulos estruturados que a placa de vídeo processa mais rápido!
+## Próximos Passos (Correção de Rota)
+A conclusão anterior de "abandonar o MNIST" foi precipitada. Encontramos uma anomalia em que topologias diferentes geram acurácias parecidas, mas com tempos de computação distintos. 
 
-## Conclusão e Próximos Passos
-O FlyWire não foi evoluído para classificar imagens estáticas perfeitamente. Ele foi evoluído para **reagir no tempo** (SNN) gastando **pouca energia/tempo**. 
-
-O próximo passo lógico é abandonar o MNIST e ir para o hardware local (RTX) testar **Tempo de Reação em Jogos** (Guitar Hero) e a Fase 8 de **Hardware Benchmarks**, pois já temos a dica de que a biologia processa 16% mais rápido no silício do que a matemática aleatória.
+Antes de mudar para redes temporais, executaremos a **Fase 6.1**:
+- **Replicação:** Testar 3 a 10 seeds diferentes para descartar ruído em diferenças de 0.6%.
+- **Volume:** Subir o subset de 2.000 para pelo menos 10.000 imagens do MNIST.
+- **Topologia:** Calcular e reportar o max/avg degree antes de explicar os ganhos de tempo.
+- **Profiling Cauteloso:** A causa do ganho de velocidade (se é localidade de cache, ordenação de índices, coalescência, etc.) precisará ser testada rigorosamente, não apenas assumida.
