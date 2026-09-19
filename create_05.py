@@ -9,9 +9,9 @@ nb.cells.append(nbf.v4.new_markdown_cell("""# ConnectomeBench: Arquitetura Conec
 Nesta fase damos o salto da Topologia (matemática) e Biologia (tipos celulares) para o Machine Learning real.
 Nós transformamos a matriz estática da mosca em uma rede neural PyTorch com restrição de topologia.
 
-- **Camada de Entrada (Encoder):** Os pixels do MNIST (784) se conectarão APENAS aos neurônios "sensoriais" da mosca.
+- **Camada de Entrada (Encoder):** Os pixels do Fashion-MNIST (784) se conectarão APENAS aos neurônios "sensoriais" da mosca.
 - **Camada Oculta (Cérebro):** O sinal flui internamente usando a `MaskedLinear`, otimizando e calculando APENAS as 5 milhões de arestas reais (e não 19 bilhões que uma camada densa comum teria).
-- **Camada de Saída (Readout):** Lemos a resposta final (10 dígitos) observando APENAS os neurônios "motores".
+- **Camada de Saída (Readout):** Lemos a resposta final (10 categorias de roupas) observando APENAS os neurônios "motores".
 """))
 
 nb.cells.append(nbf.v4.new_code_cell("""import sys
@@ -97,16 +97,16 @@ print(f"Neurônios alocados como SENSORIAIS: {len(sensory_indices):,}")
 print(f"Neurônios alocados como MOTORES: {len(motor_indices):,}")
 """))
 
-nb.cells.append(nbf.v4.new_markdown_cell("""## 3. Preparando o PyTorch e Dataset MNIST
+nb.cells.append(nbf.v4.new_markdown_cell("""## 3. Preparando o PyTorch e Dataset Fashion-MNIST
 """))
 
 nb.cells.append(nbf.v4.new_code_cell("""device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Treinando em: {device}")
 
-# Download do MNIST
+# Download do Fashion-MNIST
 transform = transforms.Compose([transforms.ToTensor(), transforms.Lambda(lambda x: torch.flatten(x))])
-train_dataset = datasets.MNIST('../data/external', train=True, download=True, transform=transform)
-test_dataset = datasets.MNIST('../data/external', train=False, download=True, transform=transform)
+train_dataset = datasets.FashionMNIST('../data/external', train=True, download=True, transform=transform)
+test_dataset = datasets.FashionMNIST('../data/external', train=False, download=True, transform=transform)
 
 # Pegaremos um subset minúsculo apenas para provar que a rede não quebra (PoC)
 subset_indices = list(range(1000))
