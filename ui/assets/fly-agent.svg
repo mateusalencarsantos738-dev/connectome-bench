@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 430" fill="none" role="img" aria-labelledby="title desc" style="color-scheme:dark;background:transparent">
+ <title id="title">Drosophila com guitarra</title>
+ <desc id="desc">Representação artística de uma mosca de olhos vermelhos e asas translúcidas segurando uma guitarra elétrica. Animação visual controlada por estados, sem modelo biológico.</desc>
+ <defs>
+  <linearGradient id="wing" x1="120" y1="95" x2="335" y2="217" gradientUnits="userSpaceOnUse"><stop stop-color="#8ac1d2" stop-opacity=".05"/><stop offset=".5" stop-color="#a7d0dc" stop-opacity=".19"/><stop offset="1" stop-color="#8fe8e7" stop-opacity=".32"/></linearGradient>
+  <linearGradient id="shell" x1="260" y1="185" x2="340" y2="288" gradientUnits="userSpaceOnUse"><stop stop-color="#819b9d"/><stop offset=".25" stop-color="#34515c"/><stop offset=".65" stop-color="#142831"/><stop offset="1" stop-color="#06141c"/></linearGradient>
+  <linearGradient id="thorax" x1="328" y1="122" x2="398" y2="230" gradientUnits="userSpaceOnUse"><stop stop-color="#9caa9b"/><stop offset=".2" stop-color="#4b6a70"/><stop offset=".6" stop-color="#1b3944"/><stop offset="1" stop-color="#0b202a"/></linearGradient>
+  <radialGradient id="eye"><stop stop-color="#cc8a78"/><stop offset=".65" stop-color="#8d5153"/><stop offset="1" stop-color="#382e3c"/></radialGradient>
+  <pattern id="facets" width="7" height="6" patternUnits="userSpaceOnUse"><path d="m0 3 2-3h3l2 3-2 3H2Z" stroke="#e9bca5" stroke-opacity=".26" stroke-width=".6"/></pattern>
+  <linearGradient id="guitar-paint" x1="327" y1="257" x2="395" y2="329" gradientUnits="userSpaceOnUse"><stop stop-color="#a4e5d7"/><stop offset=".5" stop-color="#559f99"/><stop offset="1" stop-color="#285764"/></linearGradient>
+  <linearGradient id="leg" x1="230" y1="210" x2="390" y2="360" gradientUnits="userSpaceOnUse"><stop stop-color="#8fb7bd"/><stop offset="1" stop-color="#375562"/></linearGradient>
+  <radialGradient id="floor-glow"><stop stop-color="#77dcd1" stop-opacity=".09"/><stop offset="1" stop-color="#77dcd1" stop-opacity="0"/></radialGradient>
+ </defs>
+ <g id="stage-floor" stroke="#29444f" stroke-width=".7" opacity=".65">
+  <path d="M72 366H620M102 345H601M144 329H579M181 317H555M211 308H531M134 390 275 302M232 390l73-88M340 390v-88M450 390l-75-88M556 390 405 302M625 389 437 302"/>
+  <ellipse cx="355" cy="345" rx="190" ry="35" fill="url(#floor-glow)" stroke="none"/><ellipse cx="355" cy="345" rx="132" ry="21" stroke="#5f949d" stroke-dasharray="3 7" opacity=".4"/>
+ </g>
+ <g id="fly-pose">
+ <g id="legs-far" stroke="#4b6c79" stroke-linecap="round" stroke-linejoin="round">
+  <path id="support-far-back" d="m311 219-71 61-62 53-22 5" stroke-width="5"/><path id="support-far-front" d="m345 218 35 74 55 46 22 2" stroke-width="4"/>
+  <path d="m238 282-5-14m-39 51-9-9m212-1 7-9m18 28 7-8" stroke-width="1.1"/>
+ </g>
+ <g id="abdomen" transform="rotate(34 285 250)">
+  <path d="M272 187C311 175 335 208 329 240c-5 37-32 73-52 80-22-15-40-55-36-89 2-21 13-38 31-44Z" fill="url(#shell)" stroke="#6c939a" stroke-width="1.4"/>
+  <path d="M246 216q39 21 82 4M243 235q44 20 81 5M246 256q37 17 71 5M254 277q26 13 49 5M264 295q14 7 24 3" stroke="#90aba6" stroke-width="3" opacity=".45"/>
+  <path d="M257 202c-9 31-4 67 16 95" stroke="#c3cec0" opacity=".35"/>
+  <g stroke="#88a4a7" stroke-width=".7"><path d="m249 216-10-2m7 17-11 1m14 20-11 3m18 17-10 5m19 14-9 6m63-78 9-3m-9 19 9 1m-16 18 9 4m-19 15 8 5m-19 13 6 6"/></g>
+ </g>
+ <g id="wing-far" fill="url(#wing)" stroke="#82b1c0" stroke-width="1" opacity=".65">
+  <path d="M344 182C295 113 172 58 125 80 84 100 236 172 344 182Z"/>
+  <path d="M344 182 140 84m204 98L181 91m163 91L149 112m117 2-24 26m-36-54-13 31m52 38 17-11"/>
+ </g>
+ <g id="thorax-body">
+  <path d="M305 210c-21-26-15-61 10-77 22-14 58-10 77 11 14 15 12 45-8 70-17 21-57 19-79-4Z" fill="url(#thorax)" stroke="#73969d" stroke-width="1.6"/>
+  <path d="M325 139c-17 19-16 49 0 64m12-70c-14 24-10 46 2 65m11-66c-9 21-7 41 6 58" stroke="#b5c2aa" stroke-width="2.5" opacity=".3"/>
+  <path d="m322 131-4-12m18 10 1-14m12 17 5-12m8 19 8-13m-65 60-12 1m19 9-13 5m68 22 7 10" stroke="#9cb6b3" stroke-width="1"/>
+ </g>
+ <g id="wing-near" fill="url(#wing)" stroke="#9ccbd6" stroke-linejoin="round">
+  <path d="M340 180C291 122 139 112 82 141c-16 8-13 19 9 23 70 15 171 27 249 16Z" stroke-width="1.6"/>
+  <path d="M335 180 90 150m245 30L114 135m221 45L141 168m194 12L203 132m132 48L232 179M148 135l-9 16 15 19m43-34-12 20 18 20m42-33-19 18 24 19m37-24-22 13 17 13M91 153l53 8 46 3 45 9" stroke-width=".8"/>
+  <path d="M106 145c74-13 148 3 218 30M110 158c68 16 145 20 214 20" stroke-width=".5" opacity=".6"/>
+ </g>
+ <g id="head">
+  <path d="M379 138c10-22 37-33 58-16 17 13 22 47 9 66-11 16-37 15-52-1-12-13-21-33-15-49Z" fill="url(#thorax)" stroke="#8fb0b3" stroke-width="1.3"/>
+  <ellipse cx="421" cy="153" rx="25" ry="34" transform="rotate(-21 421 153)" fill="url(#eye)" stroke="#c6a197" stroke-width="1.2"/>
+  <ellipse cx="421" cy="153" rx="25" ry="34" transform="rotate(-21 421 153)" fill="url(#facets)"/>
+  <path d="M437 121q10-14 15-8m-7 19q17-6 19-1m-13 47 9 5-8 13-7-1" stroke="#a3bebd" stroke-width="2" stroke-linecap="round"/>
+  <path d="m450 115 8-13m-5 7 8-1m-6-2 3-7m6 32 12-3m-7 3 6 3m-20 26 14-4m-16 10 13 1m-67-47-5-8m0 16-10-5" stroke="#96b5b7" stroke-width=".7"/>
+ </g>
+ <g id="guitar-motion">
+ <g id="guitar" transform="rotate(-28 389 273)">
+  <path id="guitar-shell" d="M363 240c-12-12-19-3-22 11-3 13-30 9-37 27-9 21 13 50 37 55 23 5 47-12 43-32-3-13-15-18-10-28 9-15 1-18-11-12Z" fill="url(#guitar-paint)" stroke="#b2d9ce" stroke-width="2"/>
+  <path d="M360 249c-7 3-7 14-15 18-12 5-25 2-28 13-4 11 3 25 16 31 17 9 32 2 33-9 1-10-8-21-1-29Z" fill="#152e39" stroke="#bdd4c8" stroke-width="1"/>
+  <path d="M351 273V296" stroke="#d5dbbc" stroke-width="7"/><path d="M332 280v16" stroke="#d5dbbc" stroke-width="6"/>
+  <path d="M351 278h146v13H351Z" fill="#243c45" stroke="#b6c3ad" stroke-width="1.3"/>
+  <path d="m497 278 18-5 18 6-5 13-31-1Z" fill="#aec7b6" stroke="#d3dfd0"/>
+  <path d="M365 278v13m12-13v13m12-13v13m11-13v13m11-13v13m10-13v13m10-13v13m9-13v13m9-13v13m8-13v13m8-13v13m7-13v13m7-13v13m6-13v13" stroke="#a4b6b1" stroke-width=".8"/>
+  <g fill="#c6d8d1"><circle cx="400" cy="284" r="1.4"/><circle cx="430" cy="284" r="1.4"/><circle cx="456" cy="284" r="1.4"/><circle cx="478" cy="284" r="1.4"/></g>
+  <path d="M319 279h189m-189 2h191m-191 2h193m-193 2h195m-195 2h197m-197 2h199" stroke="#d4e4d5" stroke-width=".55"/>
+  <path id="string-feedback" d="M319 281Q390 280 480 281M319 284Q390 285 480 284M319 287Q390 286 480 287" stroke="#f6edb5" stroke-width=".8" opacity="0"/>
+  <path d="m504 277-1-6m10 4v-7m10 9 2-6m-20 20-1 6m10-6 1 6m8-6 1 5" stroke="#c7d8d0" stroke-width="2"/>
+  <path d="M318 277v16" stroke="#b9cbc4" stroke-width="4"/><circle cx="340" cy="316" r="3" fill="#e0d8b1"/><circle cx="350" cy="314" r="3" fill="#e0d8b1"/>
+  <path d="M321 324c-18 26-39 26-30 43 10 17 84 13 93 28" stroke="#698f98" stroke-width="2"/>
+ </g>
+ </g>
+ <g id="legs-near" stroke="url(#leg)" stroke-linecap="round" stroke-linejoin="round">
+  <path id="support-near-back" d="m300 222-41 55 15 63-11 13-18 3" stroke-width="5"/><path id="support-near-front" d="m328 224 13 42 43 67 4 18 19 3" stroke-width="5"/>
+  <g id="strumming-leg"><path id="strumming-arm" d="m381 192-28 33-8 50 10 22" stroke-width="6"/><path id="strumming-fingers" d="m355 297 7-2m-7 2 5 4" stroke="#c2d5c8" stroke-width="2"/><circle cx="353" cy="225" r="3" fill="#8aafba" stroke="none"/></g>
+  <g id="fretting-leg"><path id="fretting-arm" d="m399 190 31 33 38 14 9 5" stroke-width="5"/><path id="fretting-fingers" d="m477 242 6-2m-6 2 4 3" stroke="#c2d5c8" stroke-width="2"/><circle cx="430" cy="223" r="3" fill="#8aafba" stroke="none"/></g>
+  <path d="m268 268-8-6m1 20-7 4m14 15-7 4m11 12-7 3m83-53 8-5m3 21 7-6m1 20 8-5" stroke="#93aeb3" stroke-width="1"/>
+  <g fill="#8aafba" stroke="none"><circle cx="259" cy="277" r="3"/><circle cx="341" cy="266" r="3"/></g>
+ </g>
+ <g id="contact-marker" stroke="#e9c96b" opacity=".3"><circle cx="0" cy="0" r="11" stroke-width=".8" stroke-dasharray="2 4"/></g>
+ </g>
+</svg>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080f14">
+  <title>ConnectomeBench · Estação de simulação</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M8 5 24 16 8 27Z' fill='none' stroke='%235ee3da' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="mock-data.js"></script>
+  <script defer src="components.js"></script>
+  <script defer src="fly-animation.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="./" aria-label="ConnectomeBench, início"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="m5 10 11-6 11 6v12l-11 6-11-6Z M5 10l11 6 11-6M16 16v12"/><circle cx="16" cy="16" r="3"/></svg><span>Connectome<span class="brand-light">Bench</span><small>ESTAÇÃO EXPERIMENTAL</small></span></a>
+    <div class="header-context"><span class="active-section">Simulação</span><span class="header-slash">/</span><span>Agente musical</span></div>
+    <span class="prototype-label"><span class="status-dot"></span> PROTÓTIPO VISUAL <span class="version">02</span></span>
+  </header>
+
+  <main class="simulation-screen">
+    <div class="page-heading"><div><p class="eyebrow">COMPORTAMENTO × ATIVIDADE NEURAL</p><h1>Uma mosca. Cinco notas.</h1><p class="intro">Ambiente visual para explorar a relação entre ação e atividade neural.</p></div><div class="specimen-id"><span>AGENTE VIRTUAL / 001</span><strong>Drosophila melanogaster</strong><small>Representação artística · tarefa de ritmo</small></div></div>
+
+    <section class="session-strip" aria-label="Estado do mockup">
+      <div><span class="meta-label">SESSÃO</span><strong>DEMO–001</strong></div><div><span class="meta-label">TAREFA</span><strong>Execução musical</strong></div><div><span class="meta-label">TEMPO ILUSTRATIVO</span><strong>00:02.480</strong></div><div><span class="meta-label">ANDAMENTO DEMO</span><strong>120 <small>BPM</small></strong></div><div class="session-state"><span class="status-dot"></span><strong id="agent-motion-status">Carregando agente</strong></div>
+    </section>
+
+    <div class="workspace">
+      <section class="panel fly-panel" aria-labelledby="fly-title">
+        <div class="panel-heading"><div><span class="panel-index">01</span><h2 id="fly-title">Ambiente do agente</h2></div><span class="micro-label">VISTA LATERAL / ARTÍSTICA</span></div>
+        <div class="fly-stage">
+          <div class="stage-caption"><span class="live-bracket" id="fly-state-label" aria-live="polite">IDLE</span><span>DEMO VISUAL</span></div>
+          <div class="fly-motion-controls">
+            <label class="sr-only" for="fly-state">Estado visual do agente</label>
+            <select id="fly-state" disabled aria-describedby="fly-motion-note">
+              <option value="IDLE">Idle</option><option value="PREPARANDO">Preparando</option><option value="TOCANDO">Tocando</option><option value="ACERTO">Acerto</option><option value="ERRO">Erro</option><option value="COMBO">Combo</option>
+            </select>
+            <button id="fly-pause" type="button" disabled aria-label="Pausar animação" title="Pausar animação" aria-pressed="false">Ⅱ</button>
+          </div>
+          <div class="stage-ruler" aria-hidden="true"><span>03</span><span>02</span><span>01</span></div>
+          <object class="fly-agent" id="fly-agent-view" data="assets/fly-agent.svg" type="image/svg+xml" aria-label="Drosophila animada segurando uma guitarra; uma pata toca as cordas e a outra acompanha o braço do instrumento." width="680" height="430" tabindex="-1"><img src="assets/fly-agent.svg" alt="Drosophila segurando uma guitarra elétrica" width="680" height="430"></object>
+          <div class="stage-axis" aria-hidden="true"><svg viewBox="0 0 55 50"><path d="M15 35V7M15 35h30M15 35 2 46"/><text x="18" y="10">Y</text><text x="43" y="31">X</text></svg></div>
+          <div class="agent-tag"><span class="status-dot"></span> AGENTE VIRTUAL <span>+ GUITARRA</span></div>
+          <div class="pose-tag">AGENTE <span id="fly-pose-description">Em repouso</span></div>
+        </div>
+        <div class="music-section"><div class="subheading"><h3>Sequência musical</h3><span>NOTAS DEMONSTRATIVAS</span></div><div id="music-track"></div><div class="track-footer"><span>COMPASSO <b>02 / 16</b></span><span><i class="tiny-line"></i> instante de referência</span><span>4/4</span></div></div>
+      </section>
+
+      <section class="panel neural-panel" aria-labelledby="neural-title">
+        <div class="panel-heading"><div><span class="panel-index">02</span><h2 id="neural-title">Visualização neural</h2></div><span class="concept-tag">CONCEITUAL</span></div>
+        <div class="neural-stage"><div class="neural-topline"><span>ESTRUTURA BILATERAL ESTILIZADA</span><span>VISTA DORSAL</span></div><div id="connectome-view"></div><div class="neural-caption"><span class="crosshair">⌖</span><span>Estrutura ilustrativa inspirada na forma do cérebro da mosca.<br><strong>Não corresponde à conectividade real do FlyWire.</strong></span></div></div>
+        <div class="neural-toolbar"><fieldset><legend>CAMADAS VISUAIS</legend><label><input type="checkbox" id="show-structure" checked> Estrutura</label><label><input type="checkbox" id="show-activity" checked> Destaques</label></fieldset><div class="intensity-legend"><span>INTENSIDADE ILUSTRATIVA</span><div><small>−</small><i></i><small>+</small></div></div></div>
+      </section>
+
+      <div class="relationship-strip"><span class="relationship-label"><span class="link-icon" aria-hidden="true">↔</span> ASSOCIAÇÃO VISUAL</span><div class="relationship-flow"><span>Evento <b data-selected-channel>E3</b></span><i></i><span>Ação do agente</span><i></i><span>Destaque neural</span><i></i><span>Traço ilustrativo</span></div><span class="relationship-note">Mapeamento conceitual, sem atribuição biológica</span></div>
+
+      <section class="panel actions-panel" aria-labelledby="actions-title"><div class="panel-heading"><div><span class="panel-index">03</span><h2 id="actions-title">Canais de ação</h2></div><span class="micro-label">E1 — E5</span></div><p class="section-help">Selecione um canal para inspecionar a associação visual.</p><div id="action-channels" class="action-channels" role="group" aria-label="Canal ilustrativo destacado"></div><div class="action-description"><span class="selected-marker"></span><p id="channel-description" aria-live="polite"></p><span class="static-badge">CANAIS MOCK</span></div><div class="transport"><button disabled aria-describedby="transport-note"><span aria-hidden="true">▶</span> Iniciar simulação</button><div><p id="transport-note">Simulação futura. Controle a animação no painel do agente.</p><p id="fly-motion-note" aria-live="polite">Animação visual local · sem áudio.</p></div></div></section>
+
+      <section class="panel activity-panel" aria-labelledby="activity-title"><div class="panel-heading"><div><span class="panel-index">04</span><h2 id="activity-title">Atividade por canal</h2></div><span class="micro-label">DADOS ILUSTRATIVOS</span></div><div class="graph-caption"><span>Amplitude relativa <span class="muted">/ sem unidade física</span></span><span>JANELA DEMO · 4 s</span></div><div id="activity-graph"></div><div class="graph-footer"><span><i class="tiny-line"></i> Mesma referência temporal da sequência</span><span>Tempo ilustrativo (s)</span></div></section>
+    </div>
+    <footer class="screen-footer"><p><span class="info-symbol">i</span> Agente animado. Notas, sinais e indicadores são demonstrativos; não representam medições biológicas.</p><span>CONNECTOMEBENCH <b>/</b> ETAPA 02</span></footer>
+  </main>
+  <noscript>Ative JavaScript para exibir os desenhos conceituais dos canais e do cérebro. Nenhuma simulação será executada.</noscript>
+</body>
+</html>
