@@ -1112,3 +1112,9 @@ input[type=checkbox] {
 .brain-activity .channel-visual.is-selected text { font-weight: bold; text-decoration: underline; }
 .brain-activity [data-intensity], .neural-trace { transition: none; }
 .neural-trace { opacity: .7; }
+
+.sustain-option { flex-basis: 100%; font-size: 10px; color: #9aacb6; }
+.sustain-tail { opacity: .25; }
+.sustain-note[data-note-state="active"] .note-head { stroke: #fff; stroke-width: 1; }
+.sustain-note[data-note-state="ended"] { opacity: .4; }
+#music-track [data-note-state] { transition: none; }

@@ -37,6 +37,9 @@ window.NeuralVisual = (() => {
       paths.set(channel, path); series.set(channel, new Float64Array(sampleCount));
     }
     let positionMs = 0, status = 'ready', destroyed = false, reduced = Boolean(reducedMotion);
+    const holds = new Map();
+    const rings = new Map(channels.map(channel => [channel, root.querySelector(`#sustain-${channel}`)]));
+    if ([...rings.values()].some(ring => !ring)) throw new Error("Indicador de sustentação ausente.");
     const seen = new Set(), dirty = new Set(channels);
     // Fixed-size sampled series are the common state for the graph and node intensity.
     // Only received events contribute; no independent reading/scheduling of notes.
@@ -47,13 +50,21 @@ window.NeuralVisual = (() => {
           !Number.isFinite(event.durationMs) || event.durationMs <= 0) throw new Error('Evento visual inválido.');
       if (!series.has(event.channel)) throw new Error(`Canal visual não mapeado: ${event.channel}`);
       if (seen.has(event.eventId)) return false;
+      if (event.sustainMs !== undefined && (!Number.isFinite(event.sustainMs) || event.sustainMs < 0 || event.timestampMs + event.sustainMs > durationMs)) throw new Error('Sustentação visual inválida.');
       seen.add(event.eventId);
+      if (event.sustainMs > 0) holds.set(event.eventId, event);
       const values = series.get(event.channel);
       const from = Math.max(0, Math.ceil(event.timestampMs / stepMs));
       const to = Math.min(sampleCount - 1, Math.ceil((event.timestampMs + responseMs) / stepMs));
       for (let i = from; i <= to; i++) values[i] += envelope(i * stepMs - event.timestampMs);
       dirty.add(event.channel);
       return true;
+    }
+    function release(event) {
+      if (destroyed) return;
+      if (event?.type !== 'NOTE_END') throw new Error('Finalização visual inválida.');
+      const held = holds.get(event.eventId);
+      if (held && held.channel === event.channel && held.timestampMs + held.sustainMs === event.timestampMs) holds.delete(event.eventId);
     }
     function intensity(channel) {
       const values = series.get(channel);
@@ -62,6 +73,8 @@ window.NeuralVisual = (() => {
       return Math.min(1, values[lo]) + (Math.min(1, values[hi]) - Math.min(1, values[lo])) * (index - lo);
     }
     function paint() {
+      for (const [id, held] of holds) if (positionMs >= held.timestampMs + held.sustainMs || ['ended','error'].includes(status)) holds.delete(id);
+      for (const channel of channels) rings.get(channel).setAttribute('opacity', [...holds.values()].some(note => note.channel === channel && positionMs >= note.timestampMs) ? '.8' : '0');
       const levels = Object.fromEntries(channels.map(channel => [channel, intensity(channel)]));
       for (const target of targets.values()) {
         const level = Math.min(1, [...target.channels].reduce((sum, channel) => sum + levels[channel], 0));
@@ -89,14 +102,14 @@ window.NeuralVisual = (() => {
     }
     function reset() {
       if (destroyed) return;
-      seen.clear(); positionMs = 0; status = 'ready';
+      seen.clear(); holds.clear(); positionMs = 0; status = 'ready';
       for (const channel of channels) { series.get(channel).fill(0); dirty.add(channel); }
       paint();
     }
     function setReducedMotion(value) { if (!destroyed) { reduced = Boolean(value); paint(); } }
     function destroy() { if (destroyed) return; reset(); destroyed = true; targets.clear(); paths.clear(); series.clear(); dirty.clear(); }
     reset();
-    return Object.freeze({ receive, update, reset, setReducedMotion, destroy });
+    return Object.freeze({ receive, release, update, reset, setReducedMotion, destroy });
   }
   return Object.freeze({ channelMap, responseMs, attackMs, envelope, create });
 })();

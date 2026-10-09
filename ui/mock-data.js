@@ -11,3 +11,10 @@ window.MockData = Object.freeze({
     { id: "E5", color: "#bf9be3", label: "Nota 05", description: "E5 · Associação ilustrativa da nota 05. Movimento de guitarra demonstrativo; sem atribuição biológica.", times: [0.48, 1.12, 2.22, 3.8], region: [524, 177] },
   ],
 });
+
+// Optional invented sustain examples; the original twenty notes remain unchanged.
+window.SustainDemo = Object.freeze([
+  Object.freeze({ type: "NOTE_EVENT", eventId: "demo-hold-1", channel: "E1", timestampMs: 200, durationMs: 180, sustainMs: 2400 }),
+  Object.freeze({ type: "NOTE_EVENT", eventId: "demo-hold-2", channel: "E4", timestampMs: 1200, durationMs: 180, sustainMs: 2000 }),
+  Object.freeze({ type: "NOTE_EVENT", eventId: "demo-hold-3", channel: "E1", timestampMs: 2600, durationMs: 180, sustainMs: 1400 }),
+]);

@@ -16,13 +16,30 @@ window.SimulationViews = (() => {
       content += `<g class="channel-visual" data-channel="${channel.id}">`;
       sequence.events.filter(event => event.channel === channel.id).forEach(event => {
         const t = event.timestampMs / 1000;
-        content += `<rect x="${xTime(t, data) - 7}" y="${y - 3}" width="14" height="6" rx="2" fill="${channel.color}"/>`;
+        const noteIndex = sequence.events.indexOf(event);
+        const width = (event.sustainMs || 0) / sequence.durationMs * 568;
+        content += `<g id="track-note-${noteIndex}" class="${event.sustainMs > 0 ? "sustain-note" : "short-note"}" data-note-state="pending">`;
+        if (event.sustainMs > 0) content += `<rect class="sustain-tail" x="${xTime(t, data)}" y="${y - 2}" width="${width}" height="4" fill="${channel.color}"/><rect id="track-fill-${noteIndex}" x="${xTime(t, data)}" y="${y - 2}" width="0" height="4" fill="${channel.color}"/>`;
+        content += `<rect class="note-head" x="${xTime(t, data) - 7}" y="${y - 3}" width="14" height="6" rx="2" fill="${channel.color}"/></g>`;
       });
       content += "</g>";
     });
     const x = 0;
     content += `<g data-playhead transform="translate(42 0)">` + line(x, 0, x, 96, 'stroke="#d6e4e8" stroke-width="1"') + `<path d="M${x - 4} 0h8l-4 5Z" fill="#d6e4e8"/></g>`;
-    return svg("Sequência de cinco canais E1 a E5, notas estáticas e referência temporal", "0 0 630 96", content);
+    return svg("Sequência E1 a E5; barras indicam a duração das notas sustentadas, preenchidas pelo cursor temporal", "0 0 630 96", content);
+  }
+
+  function trackProgress(root, sequence) {
+    const notes = sequence.events.map((event, index) => ({ event,
+      group: root.querySelector(`#track-note-${index}`), fill: root.querySelector(`#track-fill-${index}`) }));
+    return info => notes.forEach(({ event, group, fill }) => {
+      const age = info.positionMs - event.timestampMs;
+      const length = event.sustainMs || event.durationMs;
+      const reset = ["ready", "empty", "error"].includes(info.status);
+      const progress = reset ? 0 : Math.max(0, Math.min(1, age / length));
+      group.setAttribute("data-note-state", reset || age < 0 ? "pending" : age < length ? "active" : "ended");
+      if (fill) fill.setAttribute("width", String(progress * event.sustainMs / sequence.durationMs * 568));
+    });
   }
 
   function connectomeView(data) {
@@ -75,7 +92,7 @@ window.SimulationViews = (() => {
         content += `<path id="visual-${channel.id}-edge-${i}" d="M${px} ${py}Q${(px + x) / 2 + 9} ${(py + y) / 2 - 6} ${x} ${y}" fill="none" stroke-width="1.2"/>`;
         content += circle(x, y, i % 5 === 0 ? 2.6 : 1.5, `id="visual-${channel.id}-node-${i + 1}" stroke="none"`);
       }
-      content += circle(cx, cy, 22, 'fill="url(#node-halo)" stroke="none"') + circle(cx, cy, 8, 'fill="none" stroke-opacity=".25"') + circle(cx, cy, 3.5, `id="visual-${channel.id}-node-0" stroke="none"`);
+      content += circle(cx, cy, 22, 'fill="url(#node-halo)" stroke="none"') + circle(cx, cy, 8, `id="sustain-${channel.id}" fill="none" stroke-dasharray="3 3" opacity="0"`) + circle(cx, cy, 3.5, `id="visual-${channel.id}-node-0" stroke="none"`);
       content += line(cx, cy + 54, cx, 311, 'stroke-opacity=".4" stroke-width=".7" stroke-dasharray="2 3"') + text(cx, 327, channel.id, `text-anchor="middle" style="fill:${channel.color}"`);
       content += "</g>";
     });
@@ -113,5 +130,5 @@ window.SimulationViews = (() => {
   function actionChannels(data) {
     return data.channels.map(channel => `<button class="channel-button" type="button" data-select-channel="${channel.id}" style="--channel:${channel.color}" aria-pressed="false" aria-label="Destacar canal ${channel.id}, ${channel.label}"><span class="channel-dot" aria-hidden="true"></span><strong>${channel.id}</strong><small>${channel.label}</small></button>`).join("");
   }
-  return { musicTrack, connectomeView, activityGraph, actionChannels };
+  return { musicTrack, trackProgress, connectomeView, activityGraph, actionChannels };
 })();

@@ -6,14 +6,26 @@
   const agentView = $("#fly-agent-view"), stateSelect = $("#fly-state"), pauseButton = $("#fly-pause");
   let animation = null, observer = null, loadedSvg = null, timeline = null, activeNotes = [], sequenceMode = false;
   let sequence, selectedId, neural;
+  const sustainToggle = $("#sustain-demo");
+  sustainToggle.checked = new URLSearchParams(window.location.search).get("sustain") === "1";
+  sustainToggle.addEventListener("change", () => {
+    const url = new URL(window.location.href);
+    if (sustainToggle.checked) url.searchParams.set("sustain", "1"); else url.searchParams.delete("sustain");
+    window.location.href = url.href;
+  });
   function reportError(message) {
     start.disabled = pause.disabled = reset.disabled = true;
     $("#agent-motion-status").textContent = "Erro na demonstração";
     $("#transport-note").textContent = message;
   }
-  try { sequence = window.MusicTimeline.fromChannels(data); timeline = window.MusicTimeline.create(sequence); }
+  try {
+    sequence = window.MusicTimeline.fromChannels(data);
+    if (sustainToggle.checked) sequence = window.MusicTimeline.normalize([...sequence.events, ...window.SustainDemo], sequence.durationMs);
+    timeline = window.MusicTimeline.create(sequence);
+  }
   catch (error) { reportError(error.message); return; }
   $("#music-track").innerHTML = views.musicTrack(data, sequence);
+  const updateTrack = views.trackProgress($("#music-track"), sequence);
   $("#connectome-view").innerHTML = views.connectomeView(data);
   $("#activity-graph").innerHTML = views.activityGraph(data, sequence);
   $("#action-channels").innerHTML = views.actionChannels(data);
@@ -59,13 +71,14 @@
   }
   function updateTime(info) {
     neural.update(info);
+    updateTrack(info);
     animation && sequenceMode && animation.renderTimeline(info);
     const ms = Math.floor(info.positionMs);
     $("#sequence-time").textContent = `${String(Math.floor(ms / 60000)).padStart(2, "0")}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")}.${String(ms % 1000).padStart(3, "0")}`;
     $("#sequence-progress").textContent = `${info.processed} / ${info.total}`;
     const x = 42 + (info.durationMs ? info.positionMs / info.durationMs : 0) * 568;
     document.querySelectorAll("[data-playhead]").forEach(element => element.setAttribute("transform", `translate(${x} 0)`));
-    activeNotes = activeNotes.filter(note => info.positionMs < note.timestampMs + note.durationMs);
+    activeNotes = activeNotes.filter(note => info.positionMs < note.timestampMs + (note.sustainMs || note.durationMs));
     if (sequenceMode) selectChannel(activeNotes.at(-1)?.channel);
   }
   function updateControls(info) {
@@ -73,6 +86,7 @@
     $("#neural-frame-state").textContent = info.status === "ended" ? "QUADRO FINAL CONGELADO" : "VISTA DORSAL";
     const busy = ["running", "paused"].includes(info.status);
     start.disabled = !animation || busy || info.status === "empty" || info.status === "error";
+    sustainToggle.disabled = busy;
     pause.disabled = !busy; reset.disabled = !animation;
     pause.textContent = info.status === "paused" ? "Retomar" : "Pausar";
     stateSelect.disabled = !animation || busy;
@@ -89,9 +103,13 @@
   }
   timeline.on("RESET", () => { sequenceMode = true; activeNotes = []; neural.reset(); animation?.resetTimeline(); });
   timeline.on("NOTE_EVENT", event => { neural.receive(event); activeNotes.push(event); animation?.noteEvent(event); });
+  timeline.on("NOTE_END", event => {
+    neural.release(event); animation?.noteEnd(event);
+    activeNotes = activeNotes.filter(note => note.eventId !== event.eventId);
+  });
   timeline.on("TIME_UPDATE", updateTime);
   timeline.on("STATE", updateControls);
-  timeline.on("ERROR", info => { neural.reset(); activeNotes = []; animation?.renderTimeline(info); selectChannel(null); updateControls(info); reportError(info.error); reset.disabled = !animation; });
+  timeline.on("ERROR", info => { updateTrack(info); neural.reset(); activeNotes = []; animation?.renderTimeline(info); selectChannel(null); updateControls(info); reportError(info.error); reset.disabled = !animation; });
   function togglePause() { timeline.snapshot().status === "paused" ? timeline.resume() : timeline.pause(); }
   start.addEventListener("click", () => timeline.start());
   pause.addEventListener("click", togglePause);

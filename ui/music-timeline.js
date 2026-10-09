@@ -9,7 +9,9 @@ window.MusicTimeline = (() => {
           typeof event.eventId !== "string" || !event.eventId || ids.has(event.eventId) ||
           !Number.isFinite(event.timestampMs) || event.timestampMs < 0 ||
           !Number.isFinite(event.durationMs) || event.durationMs <= 0 ||
-          event.timestampMs + event.durationMs > durationMs) throw new Error("Evento musical inválido ou duplicado.");
+          event.timestampMs + (event.sustainMs > 0 ? event.sustainMs : event.durationMs) > durationMs) throw new Error("Evento musical inválido ou duplicado.");
+      if (event.sustainMs !== undefined && (!Number.isFinite(event.sustainMs) || event.sustainMs < 0 ||
+          event.timestampMs + event.sustainMs > durationMs)) throw new Error("Duração sustentada inválida.");
       ids.add(event.eventId);
       return Object.freeze({ ...event });
     });
@@ -28,6 +30,12 @@ window.MusicTimeline = (() => {
   }
   function create(input, runtime = {}) {
     const sequence = normalize(input?.events, input?.durationMs);
+    // End precedes start at equal timestamps; ties otherwise retain source order.
+    const boundaries = sequence.events.flatMap(event => event.sustainMs > 0
+      ? [event, Object.freeze({ type: "NOTE_END", eventId: event.eventId, channel: event.channel,
+          timestampMs: event.timestampMs + event.sustainMs, startTimestampMs: event.timestampMs })] : [event]);
+    boundaries.sort((a, b) => a.timestampMs - b.timestampMs || (a.type === b.type ? 0 : a.type === "NOTE_END" ? -1 : 1));
+    let boundaryCursor = 0;
     const now = runtime.now || (() => performance.now());
     const request = runtime.requestFrame || (fn => window.requestAnimationFrame(fn));
     const cancel = runtime.cancelFrame || (id => window.cancelAnimationFrame(id));
@@ -46,9 +54,10 @@ window.MusicTimeline = (() => {
     function update() {
       positionMs = Math.min(sequence.durationMs, Math.max(positionMs, base + now() - anchor));
       const run = generation;
-      while (cursor < sequence.events.length && sequence.events[cursor].timestampMs <= positionMs) {
-        const event = sequence.events[cursor++];
-        emit("NOTE_EVENT", event);
+      while (boundaryCursor < boundaries.length && boundaries[boundaryCursor].timestampMs <= positionMs) {
+        const event = boundaries[boundaryCursor++];
+        if (event.type === "NOTE_EVENT") cursor++;
+        emit(event.type, event);
         if (generation !== run || status !== "running") return;
       }
       emit("TIME_UPDATE", snapshot());
@@ -59,7 +68,7 @@ window.MusicTimeline = (() => {
     function tick() { frame = null; guarded(update); schedule(); }
     function reset() {
       if (destroyed) return;
-      stop(); generation++; positionMs = cursor = 0; error = null;
+      stop(); generation++; positionMs = cursor = boundaryCursor = 0; error = null;
       status = sequence.events.length ? "ready" : "empty";
       guarded(() => { emit("RESET", snapshot()); emit("TIME_UPDATE", snapshot()); emit("STATE", snapshot()); });
     }

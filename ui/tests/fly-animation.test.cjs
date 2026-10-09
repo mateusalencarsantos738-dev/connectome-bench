@@ -180,3 +180,50 @@ test('every musical channel drives a distinct fret pose; reduced motion has no t
     h.controller.renderTimeline({positionMs:4000,status:'ended'});assert.equal(h.controller.snapshot().state,'IDLE');
   }
 });
+
+const heldNote = (eventId='hold-a', channel='E1', timestampMs=100, sustainMs=1200) => ({type:'NOTE_EVENT',eventId,channel,timestampMs,durationMs:180,sustainMs});
+const endNote = note => ({type:'NOTE_END',eventId:note.eventId,channel:note.channel,timestampMs:note.timestampMs+note.sustainMs});
+test('sustained note plucks once, holds its fret, releases and never starts a second clock', () => {
+  const h=setup();h.controller.resetTimeline();const note=heldNote();h.controller.noteEvent(note);
+  h.controller.renderTimeline({positionMs:145,status:'running'});assert.equal(h.controller.snapshot().phase,'pluck');
+  assert.ok(Number(h.elements.get('#string-feedback').attrs.opacity)>0);
+  for(const positionMs of [400,700,1000]) {
+    h.controller.renderTimeline({positionMs,status:'running'});assert.equal(h.controller.snapshot().phase,'hold');
+    assert.equal(h.controller.snapshot().label,'Sustentando E1');
+    assert.ok(Number(h.elements.get('#string-feedback').attrs.opacity)<1e-10);
+  }
+  h.controller.noteEnd(endNote(note));h.controller.renderTimeline({positionMs:1300,status:'running'});
+  assert.equal(h.controller.snapshot().state,'IDLE');assert.equal(h.controller.snapshot().phase,'idle');
+  assert.equal(h.frames.size,0);assert.equal(h.timers.size,0);
+});
+test('overlapping same-channel holds release by ID; newer short note temporarily owns the hand', () => {
+  const h=setup(), a=heldNote(), b=heldNote('hold-b','E1',200,1500);
+  h.controller.resetTimeline();h.controller.noteEvent(a);h.controller.noteEvent(b);
+  h.controller.renderTimeline({positionMs:1000,status:'running'});assert.equal(h.controller.snapshot().phase,'hold');
+  h.controller.noteEnd({...endNote(b),channel:'E5'});
+  h.controller.noteEnd(endNote(a));h.controller.renderTimeline({positionMs:1300,status:'running'});assert.equal(h.controller.snapshot().label,'Sustentando E1');
+  h.controller.noteEvent({eventId:'short',channel:'E3',timestampMs:1320,durationMs:180});
+  h.controller.renderTimeline({positionMs:1360,status:'running'});assert.equal(h.controller.snapshot().phase,'pluck');
+  h.controller.renderTimeline({positionMs:1550,status:'running'});assert.equal(h.controller.snapshot().label,'Sustentando E1');
+  h.controller.noteEnd(endNote(b));h.controller.renderTimeline({positionMs:1700,status:'running'});assert.equal(h.controller.snapshot().state,'IDLE');
+});
+test('different-channel overlap and exact handoff choose newest active note deterministically', () => {
+  const h=setup(), a=heldNote(),b=heldNote('b','E4',200,500),c=heldNote('c','E2',1300,500);
+  h.controller.resetTimeline();h.controller.noteEvent(a);h.controller.noteEvent(b);
+  h.controller.renderTimeline({positionMs:500,status:'running'});assert.equal(h.controller.snapshot().label,'Sustentando E4');
+  h.controller.noteEnd(endNote(b));h.controller.renderTimeline({positionMs:800,status:'running'});assert.equal(h.controller.snapshot().label,'Sustentando E1');
+  h.controller.noteEnd(endNote(a));h.controller.noteEvent(c);h.controller.renderTimeline({positionMs:1340,status:'running'});assert.equal(h.controller.snapshot().state,'TOCANDO');
+  h.controller.renderTimeline({positionMs:1500,status:'running'});assert.equal(h.controller.snapshot().label,'Sustentando E2');
+});
+test('pause freezes a sustain, resume does not pluck again; reset, late frame and end clear it', () => {
+  for(const reduced of [false,true]){
+    const h=setup(reduced);h.controller.resetTimeline();h.controller.noteEvent(heldNote());
+    h.controller.renderTimeline({positionMs:500,status:'paused'});const geometry=JSON.stringify([...h.elements]);h.advance(4000);
+    assert.equal(JSON.stringify([...h.elements]),geometry);
+    h.controller.renderTimeline({positionMs:600,status:'running'});assert.equal(h.controller.snapshot().phase,'hold');
+    h.controller.resetTimeline();assert.equal(h.controller.snapshot().state,'IDLE');
+    h.controller.noteEvent(heldNote());h.controller.renderTimeline({positionMs:3000,status:'running'});assert.equal(h.controller.snapshot().state,'IDLE');
+    h.controller.noteEvent(heldNote());h.controller.renderTimeline({positionMs:500,status:'ended'});assert.equal(h.controller.snapshot().state,'IDLE');
+    assert.equal(h.frames.size,0);assert.equal(h.timers.size,0);
+  }
+});

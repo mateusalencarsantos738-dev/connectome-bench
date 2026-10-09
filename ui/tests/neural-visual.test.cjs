@@ -118,3 +118,52 @@ test('neural input error is surfaced through existing timeline ERROR and stops t
   player.on('NOTE_EVENT',h.controller.receive);player.on('ERROR',info=>reported=info.error);player.start();
   assert.match(reported,/não mapeado/);assert.equal(player.snapshot().status,'error');assert.equal(callback,undefined);
 });
+
+test('sustain ring outlives the unchanged transient pulse and ends without affecting its curve',()=>{
+  const h=setup(),event={...note(),sustainMs:1500};h.controller.receive(event);
+  h.update(140);assert.equal(h.level('visual-E1-node-0'),1);assert.equal(h.root.elements.get('sustain-E1').attrs.opacity,'.8');
+  h.update(900);assert.equal(h.level('visual-E1-node-0'),0);assert.equal(h.root.elements.get('sustain-E1').attrs.opacity,'.8');
+  const curve=h.graph.elements.get('neural-trace-E1').attrs.d;
+  h.controller.release({type:'NOTE_END',eventId:event.eventId,channel:'E1',timestampMs:1600});h.update(1600);
+  assert.equal(h.root.elements.get('sustain-E1').attrs.opacity,'0');assert.equal(h.graph.elements.get('neural-trace-E1').attrs.d,curve);
+});
+test('sustain release preserves other holds, pause freezes and reset or delayed time clears rings',()=>{
+  const h=setup(),a={...note(),sustainMs:1000},b={...note('E1',200,'b'),sustainMs:2000};
+  h.controller.receive(a);h.controller.receive(b);h.update(500,'paused');const frozen=h.snapshot();h.update(500,'paused');assert.equal(h.snapshot(),frozen);
+  h.controller.release({type:'NOTE_END',eventId:a.eventId,channel:'E1',timestampMs:1100});h.update(1100);
+  assert.equal(h.root.elements.get('sustain-E1').attrs.opacity,'.8');
+  h.controller.release({type:'NOTE_END',eventId:b.eventId,channel:'E4',timestampMs:2200});h.update(1200);assert.equal(h.root.elements.get('sustain-E1').attrs.opacity,'.8');
+  h.update(3500);assert.equal(h.root.elements.get('sustain-E1').attrs.opacity,'0');
+  h.controller.reset();h.controller.receive(a);h.update(500);h.controller.reset();assert.equal(h.root.elements.get('sustain-E1').attrs.opacity,'0');
+});
+test('short sustain release does not truncate onset pulse; end frame clears rings only',()=>{
+  const h=setup(),event={...note(),sustainMs:100};h.controller.receive(event);h.update(140);
+  h.controller.release({type:'NOTE_END',eventId:event.eventId,channel:'E1',timestampMs:200});h.update(200);
+  assert.ok(h.level('visual-E1-node-0')>0);assert.equal(h.root.elements.get('sustain-E1').attrs.opacity,'0');
+  h.controller.receive({...note('E5',3800),sustainMs:200});h.update(4000,'ended');assert.ok(h.level('visual-E5-node-0')>0);assert.equal(h.root.elements.get('sustain-E5').attrs.opacity,'0');
+});
+test('track tail length and fill derive from duration and central time, independently by note',()=>{
+  const sequence=music.normalize([{...note('E1',100,'a'),sustainMs:1000},{...note('E1',600,'b'),sustainMs:2000},note('E2',100)],4000);
+  const markup=window.SimulationViews.musicTrack(window.MockData,sequence),root=dom(markup);
+  const update=window.SimulationViews.trackProgress(root,sequence);
+  assert.match(markup,/class="sustain-tail"[^>]*width="142"/);assert.match(markup,/class="sustain-tail"[^>]*width="284"/);
+  update({positionMs:600,status:'paused'});assert.equal(root.elements.get('track-fill-0').attrs.width,'71');
+  assert.equal(root.elements.get('track-note-0').attrs['data-note-state'],'active');
+  assert.equal(root.elements.get('track-fill-2').attrs.width,'0');
+  update({positionMs:1100,status:'running'});assert.equal(root.elements.get('track-note-0').attrs['data-note-state'],'ended');assert.equal(root.elements.get('track-note-2').attrs['data-note-state'],'active');
+  update({positionMs:0,status:'ready'});assert.equal(root.elements.get('track-fill-0').attrs.width,'0');assert.equal(root.elements.get('track-note-2').attrs['data-note-state'],'pending');
+});
+test('demo start/end stream reconciles track and rings after a delayed frame and repeated reset',()=>{
+  const h=setup();const original=music.fromChannels(window.MockData),sequence=music.normalize([...original.events,...window.SustainDemo],4000);
+  const root=dom(window.SimulationViews.musicTrack(window.MockData,sequence)),updateTrack=window.SimulationViews.trackProgress(root,sequence);
+  let now=0,id=0;const frames=new Map(),ends=[];
+  const player=music.create(sequence,{now:()=>now,requestFrame:fn=>{frames.set(++id,fn);return id;},cancelFrame:id=>frames.delete(id)});
+  player.on('NOTE_EVENT',h.controller.receive);player.on('NOTE_END',e=>{h.controller.release(e);ends.push(e.eventId);});
+  player.on('RESET',h.controller.reset);player.on('TIME_UPDATE',info=>{h.controller.update(info);updateTrack(info);});player.on('STATE',h.controller.update);
+  const advance=ms=>{now+=ms;const callbacks=[...frames.values()];frames.clear();callbacks.forEach(fn=>fn(now));};
+  player.start();advance(500);player.pause();const paused=h.snapshot();advance(10000);assert.equal(h.snapshot(),paused);
+  player.resume();advance(10000);assert.deepEqual(ends,['demo-hold-1','demo-hold-2','demo-hold-3']);assert.equal(player.snapshot().processed,23);
+  for(const channel of Object.keys(api.channelMap))assert.equal(h.root.elements.get(`sustain-${channel}`).attrs.opacity,'0');
+  for(const [i,event] of sequence.events.entries())if(event.sustainMs>0)assert.equal(root.elements.get(`track-note-${i}`).attrs['data-note-state'],'ended');
+  player.reset();assert.equal(frames.size,0);player.start();advance(4000);assert.equal(ends.length,6);assert.equal(frames.size,0);
+});

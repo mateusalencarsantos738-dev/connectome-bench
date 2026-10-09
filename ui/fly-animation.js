@@ -70,11 +70,11 @@ window.FlyAnimation = (() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     let state = "IDLE", elapsed = 0, clock = 0, lastTime = null;
     let paused = false, visible = true, destroyed = false, reduced = media.matches;
-    let timelineMode = false, notes = [], timelinePosition = 0;
+    let timelineMode = false, notes = [], timelinePosition = 0, musicalPhase = "idle", heldChannel = null;
     let frame = null, timer = null, timerStart = 0;
     let previousPose = null, currentPose = poseFor(state, 0, 0, reduced);
     const active = () => !destroyed && !paused && visible && !document.hidden;
-    const snapshot = () => ({ state, label: states[state].label, paused, reducedMotion: reduced, suspended: !visible || document.hidden });
+    const snapshot = () => ({ state, label: timelineMode && musicalPhase === "hold" ? `Sustentando ${heldChannel}` : states[state].label, phase: musicalPhase, paused, reducedMotion: reduced, suspended: !visible || document.hidden });
     const notify = () => onChange(snapshot());
     const attr = (id, name, value) => parts[id].setAttribute(name, String(value));
 
@@ -163,7 +163,8 @@ window.FlyAnimation = (() => {
     function setState(next) {
       if (destroyed || !Object.hasOwn(states, next)) return false;
       stopClock();
-      timelineMode = false; notes = [];
+      timelineMode = false; notes = []; musicalPhase = "idle"; heldChannel = null;
+      svg.setAttribute("data-note-phase", "idle");
       previousPose = currentPose;
       state = next;
       elapsed = 0;
@@ -203,22 +204,41 @@ window.FlyAnimation = (() => {
       renderTimeline({ positionMs: 0, status: "ready" });
     }
     function noteEvent(event) { if (!destroyed && timelineMode) notes.push(event); }
+    function noteEnd(event) {
+      if (destroyed || event.type !== "NOTE_END") return;
+      notes = notes.filter(note => note.eventId !== event.eventId || note.channel !== event.channel || note.timestampMs + note.sustainMs !== event.timestampMs);
+    }
     function renderTimeline(info) {
       if (destroyed) return;
       timelinePosition = info.positionMs;
       paused = info.status === "paused";
-      notes = notes.filter(note => timelinePosition < note.timestampMs + note.durationMs);
+      notes = notes.filter(note => timelinePosition < note.timestampMs + (note.sustainMs || note.durationMs));
       if (["ended", "ready", "error"].includes(info.status)) notes = [];
       const next = notes.length ? "TOCANDO" : "IDLE";
-      const changed = state !== next;
+      const primary = notes.at(-1);
+      const nextPhase = !primary ? "idle" : primary.sustainMs > 0 && timelinePosition - primary.timestampMs >= Math.min(primary.durationMs, primary.sustainMs) ? "hold" : "pluck";
+      const changed = state !== next || musicalPhase !== nextPhase || heldChannel !== primary?.channel;
+      musicalPhase = nextPhase; heldChannel = primary?.channel;
+      svg.setAttribute("data-note-phase", musicalPhase);
       state = next;
       const pose = poseFor("IDLE", 0, timelinePosition / 1000, reduced);
       for (const note of notes) {
-        const progress = Math.max(0, (timelinePosition - note.timestampMs) / note.durationMs);
+        const age = timelinePosition - note.timestampMs;
+        const strikeMs = note.sustainMs > 0 ? Math.min(note.durationMs, note.sustainMs) : note.durationMs;
+        const progress = Math.max(0, Math.min(1, age / strikeMs));
         const envelope = reduced ? 1 : Math.sin(Math.PI * progress) ** 2;
         pose.strum += reduced ? 0 : 4.8 * Math.sin(2 * Math.PI * progress) * envelope;
-        pose.fret += fretByChannel[note.channel] * envelope;
-        pose.head -= envelope; pose.guitar -= .5 * envelope;
+        if (note.sustainMs > 0) {
+          // One fret hand: newest active note wins, stable input order for ties.
+          if (note === primary) {
+            const hold = reduced ? 1 : smooth(age / 40) * smooth((note.sustainMs - age) / Math.min(80, note.sustainMs / 2));
+            pose.fret = fretByChannel[note.channel] * hold;
+            pose.head -= hold; pose.guitar -= .5 * hold;
+          }
+        } else {
+          pose.fret += fretByChannel[note.channel] * envelope;
+          pose.head -= envelope; pose.guitar -= .5 * envelope;
+        }
         pose.strings = reduced ? 0 : Math.max(pose.strings, .7 * envelope);
       }
       pose.strum = Math.max(-5.5, Math.min(5.5, pose.strum));
@@ -237,7 +257,7 @@ window.FlyAnimation = (() => {
     render();
     notify();
     schedule();
-    return Object.freeze({ setState, setPaused, setVisible, snapshot, destroy, resetTimeline, noteEvent, renderTimeline });
+    return Object.freeze({ setState, setPaused, setVisible, snapshot, destroy, resetTimeline, noteEvent, noteEnd, renderTimeline });
   }
   return Object.freeze({ states, create });
 })();

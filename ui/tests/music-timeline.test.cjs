@@ -53,3 +53,42 @@ test('reset within a listener stops delivery from the previous run; destroy canc
 test('zero-time events fire on start; tied notes each fire once', () => {
   const h=setup([note(0,'a'),note(0,'b'),note(100,'c')],200);h.player.start();assert.equal(h.received.length,2);h.advance(200);assert.equal(h.received.length,3);assert.equal(h.player.snapshot().status,'ended');
 });
+
+test('sustain duration is explicit, optional and validated independently from visual strike', () => {
+  for (const sustainMs of [undefined,0,200]) {
+    const seq=api.normalize([{...note(100),sustainMs}],400);
+    assert.equal(seq.events[0].sustainMs,sustainMs);
+  }
+  for(const sustainMs of [-1,NaN,Infinity,null,'100',301]) assert.throws(()=>api.normalize([{...note(100),sustainMs}],400));
+  assert.throws(()=>api.normalize([{...note(100),sustainMs:200}, {...note(100),sustainMs:100}],400));
+  assert.throws(()=>api.normalize([{...note(100),channel:'E6',sustainMs:200}],400));
+  assert.doesNotThrow(()=>api.normalize([{...note(390),durationMs:180,sustainMs:10}],400));
+});
+test('sustain ends once at its logical timestamp, before starts at the same time', () => {
+  const h=setup([{...note(100,'a'),sustainMs:100},{...note(200,'b'),sustainMs:100},note(200,'c')]);
+  const boundaries=[];for(const type of ['NOTE_EVENT','NOTE_END'])h.player.on(type,e=>boundaries.push(`${e.type}:${e.eventId}:${e.timestampMs}`));
+  h.player.start();h.advance(199);assert.equal(boundaries.length,1);
+  h.advance(1);assert.deepEqual(boundaries,['NOTE_EVENT:a:100','NOTE_END:a:200','NOTE_EVENT:b:200','NOTE_EVENT:c:200']);
+  h.advance(200);assert.equal(boundaries.at(-1),'NOTE_END:b:300');assert.equal(h.player.snapshot().processed,3);
+  assert.equal(h.frames.size,0);
+});
+test('pause/resume preserves pending end, reset removes old boundaries, late frames drain in order', () => {
+  const h=setup([{...note(100),sustainMs:300}]), ends=[];
+  h.player.on('NOTE_END',e=>ends.push(e));h.player.start();h.advance(150);h.player.pause();
+  for(let i=0;i<3;i++){h.advance(500);h.player.pause();}
+  assert.equal(ends.length,0);h.player.resume();h.advance(249);assert.equal(ends.length,0);
+  h.advance(1);assert.equal(ends.length,1);assert.equal(ends[0].startTimestampMs,100);assert.equal(ends[0].timestampMs,400);assert.equal(h.received.length,1);
+  h.player.start();h.advance(150);h.player.reset();h.advance(2000);assert.equal(ends.length,1);
+  h.player.start();h.advance(2000);assert.equal(ends.length,2);assert.equal(h.frames.size,0);assert.equal(h.player.snapshot().status,'ended');
+});
+test('start and end lateness stays below one synthetic 16 ms frame', () => {
+  const h=setup([{...note(100),sustainMs:203}]);let at=0;const delivered=[];
+  for(const type of ['NOTE_EVENT','NOTE_END'])h.player.on(type,e=>delivered.push({timestampMs:e.timestampMs,at}));
+  h.player.start();for(let i=0;i<26;i++){at+=16;h.advance(16);}
+  assert.equal(delivered.length,2);for(const e of delivered)assert.ok(e.at>=e.timestampMs && e.at-e.timestampMs<16);
+});
+test('optional demo adds three sustained notes without changing the twenty originals', () => {
+  const original=api.fromChannels(window.MockData);const combined=api.normalize([...original.events,...window.SustainDemo],original.durationMs);
+  assert.equal(combined.events.length,23);assert.equal(original.events.filter(e=>e.sustainMs>0).length,0);
+  for(const event of original.events)assert.deepEqual(combined.events.find(e=>e.eventId===event.eventId),event);
+});

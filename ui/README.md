@@ -1,4 +1,4 @@
-# Estação visual — Etapas 1, 2, 3 e 4
+# Estação visual — Etapas 1, 2, 3, 4 e 4.5
 
 Interface conceitual com agente animado, independente dos módulos de pesquisa. O repositório não possuía
 frontend, framework, sistema de estilos ou rotas. Esta tela usa HTML, CSS e
@@ -236,3 +236,129 @@ Próxima etapa científica: definir a pergunta e o modelo computacional, validar
 proveniência/materialização e mapeamentos dos dados, especificar parâmetros e
 unidades, estabelecer controles e validação experimental. Uma animação baseada
 em eventos musicais não substitui nenhuma dessas evidências.
+
+
+## Notas sustentadas — Etapa 4.5
+
+DECISION (2026-10-09): manter `durationMs` como duração visual da palhetada
+(180 ms nos dados originais) e adicionar `sustainMs` como duração musical
+**demonstrativa explícita**. Isso evita converter as vinte notas curtas em
+notas longas apenas porque já tinham uma duração de animação.
+
+- `sustainMs` ausente ou zero: nota curta, comportamento anterior.
+- `sustainMs > 0`: sustentada até `timestampMs + sustainMs`.
+- Valores negativos, não finitos, nulos ou textuais são rejeitados; não há
+  duração sustentada padrão. `durationMs` continua obrigatório e positivo.
+- O término lógico precisa caber na janela da sequência. Se a sustentação
+  for menor que a palhetada, o movimento inicial cabe nesse intervalo menor.
+
+Exemplo demonstrativo:
+
+```js
+{ type: "NOTE_EVENT", eventId: "demo-hold-1", channel: "E1",
+  timestampMs: 200, durationMs: 180, sustainMs: 2400 }
+// O agendador deriva, sem exigir outro registro nos dados:
+{ type: "NOTE_END", eventId: "demo-hold-1", channel: "E1",
+  timestampMs: 2600, startTimestampMs: 200 }
+```
+
+A fila do mesmo relógio monotônico contém inícios e términos. Em empates,
+términos vêm antes dos inícios; eventos do mesmo tipo mantêm a ordem original.
+O contador de eventos continua contando somente inícios. Pausa conserva a
+posição da fila; reset zera os dois cursores. Um frame atrasado processa todas
+as fronteiras vencidas na ordem, e os consumidores reconciliam seu estado com
+a posição atual. Não existem timers por nota. Um NOTE_END nunca é repassado
+como nova palhetada nem como novo pulso neural.
+
+### Demonstração e pista
+
+A sequência padrão mantém exatamente as vinte notas e timestamps anteriores.
+A opção **Acrescentar 3 notas sustentadas demonstrativas** acrescenta os
+exemplos inventados de `SustainDemo`: E1 de 200–2600 ms, E4 de 1200–3200 ms e
+E1 de 2600–4000 ms. Não são transcrições de música ou medidas biológicas.
+A opção fica indisponível em execução/pausa. Trocar de opção recarrega a página
+local no início; `?sustain=1` identifica a variante com 23 notas.
+
+A pista permanece horizontal. A cabeça fica no timestamp inicial; a barra
+mede `568 × sustainMs / duraçãoDaSequência` unidades do SVG. O preenchimento
+usa a fração transcorrida, sem relógio CSS. Cada nota possui seu próprio grupo
+com estado pendente, ativo ou terminado; o fim deixa a barra esmaecida.
+As coordenadas do viewBox preservam a proporção em telas estreitas.
+
+### Pose e conflitos visuais
+
+A nota sustentada faz uma única palhetada inicial, mantém a posição de traste
+e libera a pose nos últimos até 80 ms do intervalo. A fase visual é `pluck`,
+`hold` ou `idle`; os estados manuais anteriores continuam disponíveis. O
+retorno ao repouso ocorre somente quando não há outra ação ativa.
+
+O personagem tem uma mão no braço da guitarra: a **nota ativa mais recente**
+tem prioridade visual; empates seguem a ordem de emissão. Uma nota curta
+pode ocupar temporariamente a mão, que depois volta à sustentação ainda
+ativa. Duas sustentações não são representadas como dois trastes simultâneos;
+as barras e os anéis continuam indicando ambas. O fim de uma nota remove
+somente seu ID/canal/término correspondente. A posição temporal também remove
+notas vencidas, mesmo após perda de frames. Movimento reduzido mantém poses
+fixas durante as fases sem repetir a palhetada.
+
+### Painel neural
+
+A resposta transitória mantém a subida de 40 ms e o decaimento até 600 ms,
+independentes de `sustainMs`. Um **anel tracejado** no grupo indica apenas o
+estado demonstrativo da nota sustentada; ele não prolonga a intensidade nem
+altera a curva neural visual. O módulo mantém os IDs ativos e remove somente
+a nota correspondente ao término. A presença de outra sustentação no mesmo
+canal mantém o anel visível. Pausa congela ambos; reset limpa ambos.
+
+Em 4 s, todos os términos são processados: a mosca volta ao repouso, as barras
+terminam e os anéis desaparecem. A intensidade transitória do painel continua
+congelada conforme a regra da Etapa 4. Não há cauda temporal independente.
+
+### Validação e precisão
+
+```sh
+node ui/tests/music-timeline.test.cjs
+node ui/tests/fly-animation.test.cjs
+node ui/tests/neural-visual.test.cjs
+node --check ui/music-timeline.js
+node --check ui/fly-animation.js
+node --check ui/neural-visual.js
+node --check ui/components.js
+node --check ui/app.js
+node --check ui/mock-data.js
+git diff --check -- ui
+```
+
+A entrega acontece no primeiro frame disponível após cada início/término.
+O teste com frames sintéticos de 16 ms verifica atraso inferior a 16 ms para
+ambas as fronteiras. Isso não mede latência física no navegador: sob carga,
+frames podem atrasar e a pose é reconciliada com o tempo corrente, sem tentar
+reproduzir movimentos já vencidos. Os exemplos têm precisão visual, não
+sincronização de áudio nem validação científica.
+
+Os testes cobrem dados inválidos, preservação das notas curtas, términos por
+ID, empates, sobreposição no mesmo canal e em canais distintos, troca de
+prioridade, pausa/retomada, reset/replay, término na borda da janela, frames
+atrasados, anéis independentes do pulso e geometria/progresso das barras.
+
+RESULT (2026-10-09, Node local): 48 testes passaram — 15 da linha do tempo,
+14 da animação e 19 da visualização/integração. Sintaxe dos seis módulos
+JavaScript alterados e `git diff --check -- ui` sem erros.
+
+Validação no navegador local: sequência original com 20 notas curtas e nenhuma
+barra; seleção da variante com 23 notas; cabeça/barra, preenchimento e pose
+“Sustentando E1”; pausa/retomada; reinício durante sustentação e término natural.
+Em uma pausa a 909,3 ms, a primeira barra tinha 100,7206 unidades preenchidas,
+coerentes com `(909,3 − 200) × 568 / 4000`. O final apresentou 23/23, 4 s, três
+barras terminadas, cinco anéis apagados e mosca em repouso. Reset retornou a zero,
+barras pendentes e anéis apagados. No viewport solicitado de 390×844, a área
+útil e a largura do documento eram ambas 375 px, sem transbordamento horizontal.
+Nenhum erro/aviso no console da página. A precisão de disparo e a ausência de
+palhetadas duplicadas foram verificadas pelo relógio controlado dos testes;
+a inspeção do navegador não foi uma medição instrumental de latência.
+
+Antes da Etapa 5, é necessário definir a fonte real de dados/execuções e seu
+contrato de integração, mantendo a origem demonstrativa explícita. Qualquer
+modelo neural científico requer parâmetros, unidades, controles e validação
+próprios. Áudio, pontuação, desempenho de jogador e integração FlyWire continuam
+fora desta etapa.
