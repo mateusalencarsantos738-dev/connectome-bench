@@ -5,7 +5,7 @@
   const start = $("#sequence-start"), pause = $("#sequence-pause"), reset = $("#sequence-reset");
   const agentView = $("#fly-agent-view"), stateSelect = $("#fly-state"), pauseButton = $("#fly-pause");
   let animation = null, observer = null, loadedSvg = null, timeline = null, activeNotes = [], sequenceMode = false;
-  let sequence, selectedId;
+  let sequence, selectedId, neural;
   function reportError(message) {
     start.disabled = pause.disabled = reset.disabled = true;
     $("#agent-motion-status").textContent = "Erro na demonstração";
@@ -17,6 +17,15 @@
   $("#connectome-view").innerHTML = views.connectomeView(data);
   $("#activity-graph").innerHTML = views.activityGraph(data, sequence);
   $("#action-channels").innerHTML = views.actionChannels(data);
+
+  const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+  try {
+    neural = window.NeuralVisual.create($("#connectome-view"), $("#activity-graph"), {
+      durationMs: sequence.durationMs, reducedMotion: motionPreference.matches,
+    });
+  } catch (error) { reportError(`Painel neural: ${error.message}`); return; }
+  const changeNeuralMotion = event => neural.setReducedMotion(event.matches);
+  motionPreference.addEventListener("change", changeNeuralMotion);
 
   function selectChannel(id) {
     id = id || null;
@@ -49,6 +58,7 @@
     $("#fly-motion-note").textContent = info.reducedMotion ? "Movimento reduzido: poses fixas por evento · sem áudio." : "Movimentos demonstrativos · sem áudio ou atividade neural validada.";
   }
   function updateTime(info) {
+    neural.update(info);
     animation && sequenceMode && animation.renderTimeline(info);
     const ms = Math.floor(info.positionMs);
     $("#sequence-time").textContent = `${String(Math.floor(ms / 60000)).padStart(2, "0")}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")}.${String(ms % 1000).padStart(3, "0")}`;
@@ -59,6 +69,8 @@
     if (sequenceMode) selectChannel(activeNotes.at(-1)?.channel);
   }
   function updateControls(info) {
+    neural.update(info);
+    $("#neural-frame-state").textContent = info.status === "ended" ? "QUADRO FINAL CONGELADO" : "VISTA DORSAL";
     const busy = ["running", "paused"].includes(info.status);
     start.disabled = !animation || busy || info.status === "empty" || info.status === "error";
     pause.disabled = !busy; reset.disabled = !animation;
@@ -75,11 +87,11 @@
       pauseButton.title = pauseButton.getAttribute("aria-label");
     }
   }
-  timeline.on("RESET", () => { sequenceMode = true; activeNotes = []; animation?.resetTimeline(); });
-  timeline.on("NOTE_EVENT", event => { activeNotes.push(event); animation?.noteEvent(event); });
+  timeline.on("RESET", () => { sequenceMode = true; activeNotes = []; neural.reset(); animation?.resetTimeline(); });
+  timeline.on("NOTE_EVENT", event => { neural.receive(event); activeNotes.push(event); animation?.noteEvent(event); });
   timeline.on("TIME_UPDATE", updateTime);
   timeline.on("STATE", updateControls);
-  timeline.on("ERROR", info => { activeNotes = []; animation?.renderTimeline(info); selectChannel(null); updateControls(info); reportError(info.error); reset.disabled = !animation; });
+  timeline.on("ERROR", info => { neural.reset(); activeNotes = []; animation?.renderTimeline(info); selectChannel(null); updateControls(info); reportError(info.error); reset.disabled = !animation; });
   function togglePause() { timeline.snapshot().status === "paused" ? timeline.resume() : timeline.pause(); }
   start.addEventListener("click", () => timeline.start());
   pause.addEventListener("click", togglePause);
@@ -109,5 +121,10 @@
   if (agentView.contentDocument?.documentElement?.localName === "svg") mountAgent();
   stateSelect.addEventListener("change", () => { const next = stateSelect.value; sequenceMode = false; pauseButton.disabled = false; animation?.setPaused(false); animation?.setState(next); });
   pauseButton.addEventListener("click", () => sequenceMode ? togglePause() : animation?.setPaused(!animation.snapshot().paused));
+  window.addEventListener("pagehide", event => {
+    if (event.persisted) { timeline.pause(); return; }
+    timeline.destroy(); neural.destroy(); animation?.destroy(); observer?.disconnect();
+    motionPreference.removeEventListener("change", changeNeuralMotion);
+  }, { once: false });
   updateTime(timeline.snapshot()); selectChannel(data.selectedChannel);
 })();

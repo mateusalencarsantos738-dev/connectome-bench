@@ -11,13 +11,14 @@
   <script defer src="components.js"></script>
   <script defer src="fly-animation.js"></script>
   <script defer src="music-timeline.js"></script>
+  <script defer src="neural-visual.js"></script>
   <script defer src="app.js"></script>
 </head>
 <body>
   <header class="app-header">
     <a class="brand" href="./" aria-label="ConnectomeBench, início"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="m5 10 11-6 11 6v12l-11 6-11-6Z M5 10l11 6 11-6M16 16v12"/><circle cx="16" cy="16" r="3"/></svg><span>Connectome<span class="brand-light">Bench</span><small>ESTAÇÃO EXPERIMENTAL</small></span></a>
     <div class="header-context"><span class="active-section">Simulação</span><span class="header-slash">/</span><span>Agente musical</span></div>
-    <span class="prototype-label"><span class="status-dot"></span> PROTÓTIPO VISUAL <span class="version">03</span></span>
+    <span class="prototype-label"><span class="status-dot"></span> PROTÓTIPO VISUAL <span class="version">04</span></span>
   </header>
 
   <main class="simulation-screen">
@@ -50,7 +51,7 @@
 
       <section class="panel neural-panel" aria-labelledby="neural-title">
         <div class="panel-heading"><div><span class="panel-index">02</span><h2 id="neural-title">Visualização neural</h2></div><span class="concept-tag">CONCEITUAL</span></div>
-        <div class="neural-stage"><div class="neural-topline"><span>ESTRUTURA BILATERAL ESTILIZADA</span><span>VISTA DORSAL</span></div><div id="connectome-view"></div><div class="neural-caption"><span class="crosshair">⌖</span><span>Estrutura ilustrativa inspirada na forma do cérebro da mosca.<br><strong>Não corresponde à conectividade real do FlyWire.</strong></span></div></div>
+        <div class="neural-stage"><div class="neural-topline"><span>ESTRUTURA BILATERAL ESTILIZADA</span><span id="neural-frame-state">VISTA DORSAL</span></div><div id="connectome-view"></div><div class="neural-caption"><span class="crosshair">⌖</span><span>Ativação visual por eventos musicais · sem modelo neural.<br><strong>Não corresponde à conectividade real do FlyWire.</strong></span></div></div>
         <div class="neural-toolbar"><fieldset><legend>CAMADAS VISUAIS</legend><label><input type="checkbox" id="show-structure" checked> Estrutura</label><label><input type="checkbox" id="show-activity" checked> Destaques</label></fieldset><div class="intensity-legend"><span>INTENSIDADE ILUSTRATIVA</span><div><small>−</small><i></i><small>+</small></div></div></div>
       </section>
 
@@ -58,9 +59,9 @@
 
       <section class="panel actions-panel" aria-labelledby="actions-title"><div class="panel-heading"><div><span class="panel-index">03</span><h2 id="actions-title">Canais de ação</h2></div><span class="micro-label">E1 — E5</span></div><p class="section-help">Selecione um canal para inspecionar a associação visual.</p><div id="action-channels" class="action-channels" role="group" aria-label="Canal ilustrativo destacado"></div><div class="action-description"><span class="selected-marker"></span><p id="channel-description" aria-live="polite"></p><span class="static-badge">CANAIS MOCK</span></div><div class="transport"><div class="transport-controls"><button id="sequence-start" disabled aria-describedby="transport-note">▶ Iniciar simulação</button><button id="sequence-pause" disabled>Pausar</button><button id="sequence-reset" disabled>Reiniciar</button></div><div><p id="transport-note">Sequência demonstrativa · sem áudio.</p><p id="fly-motion-note" aria-live="polite">Animação visual local · sem áudio.</p></div></div></section>
 
-      <section class="panel activity-panel" aria-labelledby="activity-title"><div class="panel-heading"><div><span class="panel-index">04</span><h2 id="activity-title">Traços de eventos</h2></div><span class="micro-label">EVENTOS DEMONSTRATIVOS</span></div><div class="graph-caption"><span>Amplitude relativa <span class="muted">/ sem unidade física</span></span><span>JANELA DEMO · 4 s</span></div><div id="activity-graph"></div><div class="graph-footer"><span><i class="tiny-line"></i> Mesma referência temporal da sequência</span><span>Tempo da sequência (s)</span></div></section>
+      <section class="panel activity-panel" aria-labelledby="activity-title"><div class="panel-heading"><div><span class="panel-index">04</span><h2 id="activity-title">Traços de eventos</h2></div><span class="micro-label">EVENTOS DEMONSTRATIVOS</span></div><div class="graph-caption"><span>Fina: eventos · grossa: intensidade visual 0–1</span><span>JANELA DEMO · 4 s</span></div><div id="activity-graph"></div><div class="graph-footer"><span><i class="tiny-line"></i> Intensidade sem unidade física · resposta demonstrativa</span><span>Tempo da sequência (s)</span></div></section>
     </div>
-    <footer class="screen-footer"><p><span class="info-symbol">i</span> Agente animado. Notas, sinais e indicadores são demonstrativos; não representam medições biológicas.</p><span>CONNECTOMEBENCH <b>/</b> ETAPA 03</span></footer>
+    <footer class="screen-footer"><p><span class="info-symbol">i</span> Agente animado. Notas, sinais e indicadores são demonstrativos; não representam medições biológicas.</p><span>CONNECTOMEBENCH <b>/</b> ETAPA 04</span></footer>
   </main>
   <noscript>Ative JavaScript para exibir os desenhos conceituais dos canais e do cérebro. Nenhuma simulação será executada.</noscript>
 </body>

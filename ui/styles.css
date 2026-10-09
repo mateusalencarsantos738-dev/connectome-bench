@@ -1106,3 +1106,9 @@ input[type=checkbox] {
 .transport-controls { display: flex; flex-wrap: wrap; gap: 6px; }
 .transport button:not(:disabled) { cursor: pointer; color: #d6e4e8; }
 .transport button:disabled { opacity: .5; }
+
+/* Temporal intensity is owned by the shared timeline: CSS must not keep fading on pause. */
+.brain-activity .channel-visual { opacity: 1; transition: none; }
+.brain-activity .channel-visual.is-selected text { font-weight: bold; text-decoration: underline; }
+.brain-activity [data-intensity], .neural-trace { transition: none; }
+.neural-trace { opacity: .7; }

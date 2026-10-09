@@ -1,4 +1,4 @@
-# Estação visual — Etapas 1, 2 e 3
+# Estação visual — Etapas 1, 2, 3 e 4
 
 Interface conceitual com agente animado, independente dos módulos de pesquisa. O repositório não possuía
 frontend, framework, sistema de estilos ou rotas. Esta tela usa HTML, CSS e
@@ -28,6 +28,7 @@ nesse caso a ilustração permanece estática e a interface orienta usar o servi
 - `app.js`: montagem, transporte, assinaturas de eventos e visibilidade de camadas.
 - `music-timeline.js`: validação, ordenação, relógio monotônico e emissão de eventos.
 - `fly-animation.js`: estados, poses coordenadas, pausa e ciclo de animação.
+- `neural-visual.js`: resposta visual aos eventos recebidos, intensidade e curva complementar.
 - `tests/fly-animation.test.cjs`: transições, interrupções, pausa, suspensão e
   movimento reduzido; execute `node --test ui/tests/fly-animation.test.cjs`.
 
@@ -101,9 +102,9 @@ exibem erro e não iniciam execução.
 A duração visual de cada palhetada é 180 ms, uma escolha artística ajustável em
 `mock-data.js`; não é duração de áudio nem medida biológica. A janela é de 4 s.
 O mapeamento artístico de canal para posição no braço fica em `fretByChannel`.
-Pista e gráfico são gerados da mesma sequência normalizada. Os traços completos
-continuam ilustrativos: somente o cursor acompanha a execução, sem reconstruir
-o cérebro ou simular propagação neural.
+Pista e gráfico são gerados da mesma sequência normalizada. Os traços completos continuam ilustrativos; na Etapa 3, somente o cursor
+acompanhava a execução. A curva complementar e os destaques temporais da
+Etapa 4 são descritos abaixo, sem reconstruir o cérebro nem simular propagação neural.
 
 `MusicTimeline` emite `NOTE_EVENT`, `TIME_UPDATE`, `STATE`, `RESET` e `ERROR`.
 Os consumidores assinam com `on`, que retorna uma função de cancelamento.
@@ -151,6 +152,87 @@ preservam os testes geométricos anteriores e verificam poses musicais e ausênc
 de timers/loops locais durante a sequência. Validação manual: iniciar, pausar,
 retomar, reiniciar durante execução, replay, seleção manual e camadas.
 
-A próxima etapa é evoluir a visualização neural conceitual sobre este contrato
-de eventos. Integração científica FlyWire/dinâmica neural exige especificação,
-dados e validação próprios; não faz parte desta implementação.
+A Etapa 4 usa esse contrato para a resposta visual descrita abaixo. Integração científica FlyWire/dinâmica neural exige especificação, dados e validação próprios; não faz parte desta implementação.
+
+
+## Visualização neural dinâmica demonstrativa — Etapa 4
+
+DECISION (2026-10-09): ativar os grupos artísticos existentes sem adicionar nós,
+sem adjacência científica e sem simular propagação entre eles. Cada E1–E5 tem
+25 círculos e 24 conexões já presentes no desenho; são elementos gráficos,
+não contagens de neurônios. `NeuralVisual.channelMap` referencia seus IDs
+`visual-E*-node-*` e `visual-E*-edge-*`. O mapeamento é configurável via opção
+`map` e independente da música e da mosca. Todos os alvos são conferidos na
+inicialização. Alvos compartilhados somam as contribuições dos canais com teto 1.
+A seleção manual sublinha o rótulo do grupo; não fabrica atividade.
+
+`app.js` encaminha o contrato original `{type: "NOTE_EVENT", channel,
+timestampMs, durationMs, eventId}` a `receive`. `TIME_UPDATE` e `STATE` chamam
+`update({positionMs, status})`; `RESET` chama `reset`. O módulo não lê a sequência
+musical, não consulta `performance.now` e não cria RAF, timer ou listener próprio.
+`durationMs` da nota é validado, mas a duração da resposta visual é um parâmetro
+artístico separado. O relógio e a animação da mosca da Etapa 3 não foram alterados.
+
+### Regra de intensidade
+
+Para idade `a = posição − timestamp`, a resposta é zero fora de `[0, 600)` ms.
+Nos primeiros 40 ms, sobe com `3p² − 2p³`, sendo `p=a/40`. Depois decai como
+`((600−a)/560)²`. As respostas recebidas somam, com saturação em 1. Não há sorteio,
+flashes aleatórios, deslocamento de nós ou atribuição anatômica.
+
+Uma série fixa de 401 amostras por canal (10 ms na janela atual de 4 s) alimenta
+**tanto** a intensidade dos elementos quanto a curva grossa do gráfico.
+A posição entre amostras usa interpolação linear; é uma aproximação gráfica,
+não uma resolução experimental. IDs já recebidos são ignorados até o reset.
+O armazenamento das séries é fixo e os IDs ocupam espaço proporcional ao número
+de eventos distintos recebidos na execução. Lotes atrasados atualizam as séries
+uma vez por evento; cada curva é redesenhada no máximo uma vez por atualização,
+apenas se recebeu eventos. As referências DOM são obtidas na inicialização.
+
+A linha fina original continua representando as notas. A linha grossa representa
+intensidade visual 0–1, sem unidade física, e só aparece até a posição atual.
+Não há taxas em Hz, spikes ou medições. Ocultar a camada de destaques esconde os
+elementos, mas mantém seu estado temporal e a curva complementar coerentes.
+
+Pausa mantém exatamente a mesma intensidade e recorte; não há transições CSS
+que continuem por conta própria. Retomar continua do mesmo instante. Reiniciar
+zera as séries, os IDs recebidos e o recorte do gráfico. No término, o painel
+**congela o quadro de 4 s**, incluindo respostas ainda incompletas; o rótulo
+“QUADRO FINAL CONGELADO” explicita essa regra. Não existe relógio de cauda.
+Em erro, o estado transitório é limpo e o transporte apresenta a falha.
+
+Com movimento reduzido, os elementos recebem realce fixo e moderado enquanto
+há resposta positiva; não há variação contínua de brilho. A curva quantitativa
+da demonstração continua acessível. A preferência é acompanhada via matchMedia.
+Ao sair da página, o listener é removido e os componentes são destruídos; no
+cache de navegação, a execução é apenas pausada para permitir retorno.
+
+### Verificação da Etapa 4
+
+```sh
+node ui/tests/neural-visual.test.cjs
+node ui/tests/music-timeline.test.cjs
+node ui/tests/fly-animation.test.cjs
+node --check ui/neural-visual.js
+node --check ui/components.js
+node --check ui/app.js
+```
+
+RESULT (2026-10-09, ambiente local Node): 14 testes novos e os 20 testes da Etapa 3
+passaram. Cobrem IDs reais do SVG gerado, cinco canais, entradas inválidas,
+mapa incompleto, subida/decaimento, compartilhamento, simultaneidade, lote de
+1.000 eventos, duplicação, pausa/retomada, reset, quadro final, reprodução
+idêntica, movimento reduzido, sequência vazia e integração com o relógio original.
+Não são testes de atividade biológica nem medições de desempenho de hardware.
+
+No navegador local foram conferidos ativação dos grupos, curva complementar,
+pausa/retomada e reinício durante execução. O instante pausado de 691,8 ms e
+os valores de intensidade permaneceram iguais entre observações; ambos os
+painéis terminaram em 4 s com 20/20 notas. Reiniciar deixou intensidade zero
+e recorte zero. Casos de entradas inválidas e movimento reduzido foram
+verificados nos testes automatizados, não por alteração de dados no navegador.
+
+Próxima etapa científica: definir a pergunta e o modelo computacional, validar
+proveniência/materialização e mapeamentos dos dados, especificar parâmetros e
+unidades, estabelecer controles e validação experimental. Uma animação baseada
+em eventos musicais não substitui nenhuma dessas evidências.

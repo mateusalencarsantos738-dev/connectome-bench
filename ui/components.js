@@ -72,10 +72,10 @@ window.SimulationViews = (() => {
         const y = cy + Math.sin(angle) * radius * .85;
         points.push([x, y]);
         const [px, py] = points[Math.floor(i / 3)];
-        content += `<path d="M${px} ${py}Q${(px + x) / 2 + 9} ${(py + y) / 2 - 6} ${x} ${y}" fill="none" stroke-opacity=".6" stroke-width=".9"/>`;
-        content += circle(x, y, i % 5 === 0 ? 2.6 : 1.5, 'stroke="none"');
+        content += `<path id="visual-${channel.id}-edge-${i}" d="M${px} ${py}Q${(px + x) / 2 + 9} ${(py + y) / 2 - 6} ${x} ${y}" fill="none" stroke-width="1.2"/>`;
+        content += circle(x, y, i % 5 === 0 ? 2.6 : 1.5, `id="visual-${channel.id}-node-${i + 1}" stroke="none"`);
       }
-      content += circle(cx, cy, 22, 'fill="url(#node-halo)" stroke="none"') + circle(cx, cy, 8, 'fill="none" stroke-opacity=".25"') + circle(cx, cy, 3.5, 'stroke="none"');
+      content += circle(cx, cy, 22, 'fill="url(#node-halo)" stroke="none"') + circle(cx, cy, 8, 'fill="none" stroke-opacity=".25"') + circle(cx, cy, 3.5, `id="visual-${channel.id}-node-0" stroke="none"`);
       content += line(cx, cy + 54, cx, 311, 'stroke-opacity=".4" stroke-width=".7" stroke-dasharray="2 3"') + text(cx, 327, channel.id, `text-anchor="middle" style="fill:${channel.color}"`);
       content += "</g>";
     });
@@ -84,7 +84,7 @@ window.SimulationViews = (() => {
   }
 
   function activityGraph(data, sequence) {
-    let content = "";
+    let content = `<defs><clipPath id="neural-trace-clip"><rect id="neural-trace-window" x="42" y="0" width="0" height="155"/></clipPath></defs>`;
     for (let i = 0; i <= 8; i++) {
       const x = xTime(i / 2, data);
       content += line(x, 5, x, 155, 'stroke="#223641" stroke-width=".6"');
@@ -103,10 +103,11 @@ window.SimulationViews = (() => {
         points.push(`${step === 0 ? "M" : "L"}${xTime(t, data).toFixed(2)},${(baseline - pulse).toFixed(2)}`);
       }
       content += `<path class="channel-visual" data-channel="${channel.id}" d="${points.join(" ")}" fill="none" stroke="${channel.color}" stroke-width="1.2"/>`;
+      content += `<path id="neural-trace-${channel.id}" class="neural-trace" clip-path="url(#neural-trace-clip)" fill="none" stroke="${channel.color}" stroke-width="2"/>`;
     });
     const x = 0;
     content += `<g data-playhead transform="translate(42 0)">` + line(x, 2, x, 153, 'stroke="#c0d4dd" stroke-width=".9" stroke-dasharray="3 3"') + "</g>";
-    return svg("Cinco traços estáticos ilustrativos alinhados às notas, de zero a quatro segundos", "0 0 630 180", content);
+    return svg("Eventos musicais em linha fina e intensidade visual demonstrativa em linha grossa, de zero a quatro segundos", "0 0 630 180", content);
   }
 
   function actionChannels(data) {
