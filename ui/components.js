@@ -6,7 +6,7 @@ window.SimulationViews = (() => {
   const circle = (x, y, r, attrs = "") => `<circle cx="${x}" cy="${y}" r="${r}" ${attrs}/>`;
   const xTime = (t, data) => 42 + t / data.duration * 568;
 
-  function musicTrack(data) {
+  function musicTrack(data, sequence) {
     let content = `<rect x="36" y="0" width="585" height="96" rx="3" fill="#091219"/>`;
     for (let i = 0; i <= 16; i++) content += line(42 + i * 35.5, 0, 42 + i * 35.5, 96, `stroke="${i % 4 ? "#17252e" : "#2b3e49"}" stroke-width=".7"`);
     data.channels.forEach((channel, index) => {
@@ -14,13 +14,14 @@ window.SimulationViews = (() => {
       content += text(1, y + 3, channel.id, `style="fill:${channel.color}"`);
       content += line(42, y, 610, y, 'stroke="#22333d" stroke-width=".6"');
       content += `<g class="channel-visual" data-channel="${channel.id}">`;
-      channel.times.forEach(t => {
+      sequence.events.filter(event => event.channel === channel.id).forEach(event => {
+        const t = event.timestampMs / 1000;
         content += `<rect x="${xTime(t, data) - 7}" y="${y - 3}" width="14" height="6" rx="2" fill="${channel.color}"/>`;
       });
       content += "</g>";
     });
-    const x = xTime(data.referenceTime, data);
-    content += line(x, 0, x, 96, 'stroke="#d6e4e8" stroke-width="1"') + `<path d="M${x - 4} 0h8l-4 5Z" fill="#d6e4e8"/>`;
+    const x = 0;
+    content += `<g data-playhead transform="translate(42 0)">` + line(x, 0, x, 96, 'stroke="#d6e4e8" stroke-width="1"') + `<path d="M${x - 4} 0h8l-4 5Z" fill="#d6e4e8"/></g>`;
     return svg("Sequência de cinco canais E1 a E5, notas estáticas e referência temporal", "0 0 630 96", content);
   }
 
@@ -82,7 +83,7 @@ window.SimulationViews = (() => {
     return svg("Representação artística bilateral do cérebro da mosca com cinco destaques conceituais E1 a E5, sem mapeamento biológico", "0 0 680 345", content);
   }
 
-  function activityGraph(data) {
+  function activityGraph(data, sequence) {
     let content = "";
     for (let i = 0; i <= 8; i++) {
       const x = xTime(i / 2, data);
@@ -98,13 +99,13 @@ window.SimulationViews = (() => {
         const t = step / 600 * data.duration;
         // A fixed decorative response around the same example notes as the track.
         // This is not a neuron model and has no physical amplitude or rate units.
-        const pulse = channel.times.reduce((total, at) => total + 18 * Math.exp(-(((t - at) / .014) ** 2)) - 4 * Math.exp(-(((t - at - .028) / .02) ** 2)), 0);
+        const pulse = sequence.events.filter(event => event.channel === channel.id).map(event => event.timestampMs / 1000).reduce((total, at) => total + 18 * Math.exp(-(((t - at) / .014) ** 2)) - 4 * Math.exp(-(((t - at - .028) / .02) ** 2)), 0);
         points.push(`${step === 0 ? "M" : "L"}${xTime(t, data).toFixed(2)},${(baseline - pulse).toFixed(2)}`);
       }
       content += `<path class="channel-visual" data-channel="${channel.id}" d="${points.join(" ")}" fill="none" stroke="${channel.color}" stroke-width="1.2"/>`;
     });
-    const x = xTime(data.referenceTime, data);
-    content += line(x, 2, x, 153, 'stroke="#c0d4dd" stroke-width=".9" stroke-dasharray="3 3"');
+    const x = 0;
+    content += `<g data-playhead transform="translate(42 0)">` + line(x, 2, x, 153, 'stroke="#c0d4dd" stroke-width=".9" stroke-dasharray="3 3"') + "</g>";
     return svg("Cinco traços estáticos ilustrativos alinhados às notas, de zero a quatro segundos", "0 0 630 180", content);
   }
 

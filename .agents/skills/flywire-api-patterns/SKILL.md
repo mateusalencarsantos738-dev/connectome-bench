@@ -32,7 +32,7 @@ pip install fafbseg navis
    flywire.set_default_dataset("public")
    ```
 
-2. **Materializações:** O dataset público usa a versão **v630**. Root IDs devem existir nessa versão.
+2. **Materializações:** Os exemplos abaixo foram escritos para **v630**; não presuma que ela seja a versão atual do serviço nem que corresponda ao CSV FAFB v783. Consulte as versões disponíveis e confirme que os root IDs pertencem à materialização escolhida.
    ```python
    # Verifica se o root_id existe na materialização atual
    from fafbseg import flywire
@@ -111,7 +111,7 @@ from fafbseg import flywire
 # Se um root_id não existir na materialização atual, atualize-o
 updated_id = flywire.update_ids(
     720575940625363947, 
-    timestamp="mat_630"  # Versão pública
+    timestamp="mat_630"  # Exemplo histórico: confirme a materialização antes de usar
 )
 print(f"ID atualizado: {updated_id}")
 ```

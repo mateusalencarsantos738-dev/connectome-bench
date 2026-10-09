@@ -28,7 +28,7 @@ connectome-bench/
 ├── LICENSE
 ├── requirements.txt
 ├── .gitignore
-├── docs/                   — Research notes and planning documents
+├── docs/                   — Documentation index, methods and planning documents
 ├── data/
 │   ├── raw/                — Raw FlyWire downloads (not committed to Git)
 │   ├── processed/          — Processed representations
@@ -50,19 +50,23 @@ connectome-bench/
 └── tests/
 ```
 
-## Experimental Roadmap
+## Research artifacts
 
-| Phase | Notebook | Status |
+The table records **versioned artifacts**, not independently verified execution status. The notebooks listed here have no saved cell outputs in Git. Use the linked result notes, experiment configuration and original logs before citing a measurement. For methods, hypotheses, Skills and further sources, see the [documentation index](docs/index.md).
+
+| Phase | Versioned notebook | Result note in Git |
 |---|---|---|
-| 0 — Dataset Audit | `00_dataset_audit.ipynb` | 🔄 In progress (Kaggle) |
-| 1 — Graph Construction | `01_graph_construction.ipynb` | ⏳ Pending |
-| 2 — Topology Analysis | `02_connectome_topology.ipynb` | ⏳ Pending |
-| 3 — Cell Type Mapping | `03_cell_type_mapping.ipynb` | ⏳ Pending |
-| 4 — Baselines | `04_baselines.ipynb` | ⏳ Pending |
-| 5 — Connectome Architecture | `05_connectome_sparse.ipynb` | ⏳ Pending |
-| 6 — Ablation Studies | `06_ablation.ipynb` | ⏳ Pending |
-| 7 — SNN / Event-Driven | `07_snn.ipynb` | ⏳ Pending |
-| 8 — Hardware Benchmark | `08_hardware_benchmark.ipynb` | ⏳ Pending |
+| 0 — Dataset Audit | [00_dataset_audit.ipynb](notebooks/00_dataset_audit.ipynb) | — |
+| 1 — Graph Construction | [01_graph_construction.ipynb](notebooks/01_graph_construction.ipynb) | — |
+| 2 — Topology Analysis | [02_connectome_topology.ipynb](notebooks/02_connectome_topology.ipynb) | — |
+| 3 — Cell Type Mapping | [03_cell_type_mapping.ipynb](notebooks/03_cell_type_mapping.ipynb) | — |
+| 4 — Baselines | [04_baselines.ipynb](notebooks/04_baselines.ipynb) | — |
+| 5 — Connectome Architecture | [05_connectome_sparse.ipynb](notebooks/05_connectome_sparse.ipynb) | [05_resultado_poc.md](notes/05_resultado_poc.md) |
+| 6 — Ablation Studies | [06_ablation.ipynb](notebooks/06_ablation.ipynb) | [06_resultado_ablacao.md](notes/06_resultado_ablacao.md) |
+| 6.1 — Statistical rigor | [06_1_rigor_statistical.ipynb](notebooks/06_1_rigor_statistical.ipynb) | [06_1_resultado_rigor.md](notes/06_1_resultado_rigor.md) |
+| 6.2 — Convergence | [06_2_convergence.ipynb](notebooks/06_2_convergence.ipynb) | [06_2_resultado_convergencia.md](notes/06_2_resultado_convergencia.md) |
+| 7 — SNN / Event-Driven | No notebook versioned | — |
+| 8 — Hardware Benchmark | No notebook versioned | — |
 
 ## Core Principles
 

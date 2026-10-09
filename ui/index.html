@@ -10,20 +10,21 @@
   <script defer src="mock-data.js"></script>
   <script defer src="components.js"></script>
   <script defer src="fly-animation.js"></script>
+  <script defer src="music-timeline.js"></script>
   <script defer src="app.js"></script>
 </head>
 <body>
   <header class="app-header">
     <a class="brand" href="./" aria-label="ConnectomeBench, início"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="m5 10 11-6 11 6v12l-11 6-11-6Z M5 10l11 6 11-6M16 16v12"/><circle cx="16" cy="16" r="3"/></svg><span>Connectome<span class="brand-light">Bench</span><small>ESTAÇÃO EXPERIMENTAL</small></span></a>
     <div class="header-context"><span class="active-section">Simulação</span><span class="header-slash">/</span><span>Agente musical</span></div>
-    <span class="prototype-label"><span class="status-dot"></span> PROTÓTIPO VISUAL <span class="version">02</span></span>
+    <span class="prototype-label"><span class="status-dot"></span> PROTÓTIPO VISUAL <span class="version">03</span></span>
   </header>
 
   <main class="simulation-screen">
     <div class="page-heading"><div><p class="eyebrow">COMPORTAMENTO × ATIVIDADE NEURAL</p><h1>Uma mosca. Cinco notas.</h1><p class="intro">Ambiente visual para explorar a relação entre ação e atividade neural.</p></div><div class="specimen-id"><span>AGENTE VIRTUAL / 001</span><strong>Drosophila melanogaster</strong><small>Representação artística · tarefa de ritmo</small></div></div>
 
     <section class="session-strip" aria-label="Estado do mockup">
-      <div><span class="meta-label">SESSÃO</span><strong>DEMO–001</strong></div><div><span class="meta-label">TAREFA</span><strong>Execução musical</strong></div><div><span class="meta-label">TEMPO ILUSTRATIVO</span><strong>00:02.480</strong></div><div><span class="meta-label">ANDAMENTO DEMO</span><strong>120 <small>BPM</small></strong></div><div class="session-state"><span class="status-dot"></span><strong id="agent-motion-status">Carregando agente</strong></div>
+      <div><span class="meta-label">SESSÃO</span><strong>DEMO–001</strong></div><div><span class="meta-label">TAREFA</span><strong>Execução musical</strong></div><div><span class="meta-label">TEMPO DA SEQUÊNCIA</span><strong id="sequence-time">00:00.000</strong></div><div><span class="meta-label">ANDAMENTO DEMO</span><strong>120 <small>BPM</small></strong></div><div class="session-state"><span class="status-dot"></span><strong id="agent-motion-status">Carregando agente</strong></div>
     </section>
 
     <div class="workspace">
@@ -44,7 +45,7 @@
           <div class="agent-tag"><span class="status-dot"></span> AGENTE VIRTUAL <span>+ GUITARRA</span></div>
           <div class="pose-tag">AGENTE <span id="fly-pose-description">Em repouso</span></div>
         </div>
-        <div class="music-section"><div class="subheading"><h3>Sequência musical</h3><span>NOTAS DEMONSTRATIVAS</span></div><div id="music-track"></div><div class="track-footer"><span>COMPASSO <b>02 / 16</b></span><span><i class="tiny-line"></i> instante de referência</span><span>4/4</span></div></div>
+        <div class="music-section"><div class="subheading"><h3>Sequência musical</h3><span>NOTAS DEMONSTRATIVAS</span></div><div id="music-track"></div><div class="track-footer"><span>EVENTOS <b id="sequence-progress">0 / 20</b></span><span><i class="tiny-line"></i> posição da sequência</span><span>4/4</span></div></div>
       </section>
 
       <section class="panel neural-panel" aria-labelledby="neural-title">
@@ -55,11 +56,11 @@
 
       <div class="relationship-strip"><span class="relationship-label"><span class="link-icon" aria-hidden="true">↔</span> ASSOCIAÇÃO VISUAL</span><div class="relationship-flow"><span>Evento <b data-selected-channel>E3</b></span><i></i><span>Ação do agente</span><i></i><span>Destaque neural</span><i></i><span>Traço ilustrativo</span></div><span class="relationship-note">Mapeamento conceitual, sem atribuição biológica</span></div>
 
-      <section class="panel actions-panel" aria-labelledby="actions-title"><div class="panel-heading"><div><span class="panel-index">03</span><h2 id="actions-title">Canais de ação</h2></div><span class="micro-label">E1 — E5</span></div><p class="section-help">Selecione um canal para inspecionar a associação visual.</p><div id="action-channels" class="action-channels" role="group" aria-label="Canal ilustrativo destacado"></div><div class="action-description"><span class="selected-marker"></span><p id="channel-description" aria-live="polite"></p><span class="static-badge">CANAIS MOCK</span></div><div class="transport"><button disabled aria-describedby="transport-note"><span aria-hidden="true">▶</span> Iniciar simulação</button><div><p id="transport-note">Simulação futura. Controle a animação no painel do agente.</p><p id="fly-motion-note" aria-live="polite">Animação visual local · sem áudio.</p></div></div></section>
+      <section class="panel actions-panel" aria-labelledby="actions-title"><div class="panel-heading"><div><span class="panel-index">03</span><h2 id="actions-title">Canais de ação</h2></div><span class="micro-label">E1 — E5</span></div><p class="section-help">Selecione um canal para inspecionar a associação visual.</p><div id="action-channels" class="action-channels" role="group" aria-label="Canal ilustrativo destacado"></div><div class="action-description"><span class="selected-marker"></span><p id="channel-description" aria-live="polite"></p><span class="static-badge">CANAIS MOCK</span></div><div class="transport"><div class="transport-controls"><button id="sequence-start" disabled aria-describedby="transport-note">▶ Iniciar simulação</button><button id="sequence-pause" disabled>Pausar</button><button id="sequence-reset" disabled>Reiniciar</button></div><div><p id="transport-note">Sequência demonstrativa · sem áudio.</p><p id="fly-motion-note" aria-live="polite">Animação visual local · sem áudio.</p></div></div></section>
 
-      <section class="panel activity-panel" aria-labelledby="activity-title"><div class="panel-heading"><div><span class="panel-index">04</span><h2 id="activity-title">Atividade por canal</h2></div><span class="micro-label">DADOS ILUSTRATIVOS</span></div><div class="graph-caption"><span>Amplitude relativa <span class="muted">/ sem unidade física</span></span><span>JANELA DEMO · 4 s</span></div><div id="activity-graph"></div><div class="graph-footer"><span><i class="tiny-line"></i> Mesma referência temporal da sequência</span><span>Tempo ilustrativo (s)</span></div></section>
+      <section class="panel activity-panel" aria-labelledby="activity-title"><div class="panel-heading"><div><span class="panel-index">04</span><h2 id="activity-title">Traços de eventos</h2></div><span class="micro-label">EVENTOS DEMONSTRATIVOS</span></div><div class="graph-caption"><span>Amplitude relativa <span class="muted">/ sem unidade física</span></span><span>JANELA DEMO · 4 s</span></div><div id="activity-graph"></div><div class="graph-footer"><span><i class="tiny-line"></i> Mesma referência temporal da sequência</span><span>Tempo da sequência (s)</span></div></section>
     </div>
-    <footer class="screen-footer"><p><span class="info-symbol">i</span> Agente animado. Notas, sinais e indicadores são demonstrativos; não representam medições biológicas.</p><span>CONNECTOMEBENCH <b>/</b> ETAPA 02</span></footer>
+    <footer class="screen-footer"><p><span class="info-symbol">i</span> Agente animado. Notas, sinais e indicadores são demonstrativos; não representam medições biológicas.</p><span>CONNECTOMEBENCH <b>/</b> ETAPA 03</span></footer>
   </main>
   <noscript>Ative JavaScript para exibir os desenhos conceituais dos canais e do cérebro. Nenhuma simulação será executada.</noscript>
 </body>

@@ -1,8 +1,8 @@
 ---
 name: connectome-data
 description: >-
-  Schema, estatísticas auditadas e regras de integridade do dataset FlyWire FAFB v783.
-  Ative SEMPRE que for escrever código que acessa o CSV de conexões ou o CSV de tipos celulares.
+  Esquema do CSV de conexões FlyWire FAFB v783 e regras de integridade dos dados locais.
+  Use ao escrever código que lê o CSV de conexões ou o CSV de tipos celulares.
 trigger: model_decision
 ---
 

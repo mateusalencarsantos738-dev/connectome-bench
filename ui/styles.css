@@ -1100,3 +1100,9 @@ input[type=checkbox] {
     transition:none!important;
   }
 }
+
+/* Musical transport preserves the existing panel and wraps on small screens. */
+.transport { flex-wrap: wrap; }
+.transport-controls { display: flex; flex-wrap: wrap; gap: 6px; }
+.transport button:not(:disabled) { cursor: pointer; color: #d6e4e8; }
+.transport button:disabled { opacity: .5; }

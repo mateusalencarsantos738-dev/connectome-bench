@@ -37,8 +37,9 @@ adj_matrix, mapper = builder.build_sparse_matrix(weight_col='syn_count')
 
 | Operação | Escala | Ferramenta Correta |
 |---|---|---|
-| Grau de saída (todos os nós) | Global | `np.array(adj_csr.sum(axis=1)).flatten()` |
-| Grau de entrada (todos os nós) | Global | `np.array(adj_csr.sum(axis=0)).flatten()` |
+| Grau ponderado de saída (todos os nós) | Global | `np.array(adj_csr.sum(axis=1)).flatten()` |
+| Grau ponderado de entrada (todos os nós) | Global | `np.array(adj_csr.sum(axis=0)).flatten()` |
+| Grau não ponderado de saída / entrada | Global | `adj_csr.getnnz(axis=1)` / `adj_csr.getnnz(axis=0)` |
 | Vizinhos de 1 neurônio | Local | `adj_csr[idx, :].indices` |
 | Componentes conectados | Global | `scipy.sparse.csgraph.connected_components(adj_csr)` |
 | Caminho mais curto | Local (≤1000 nós) | `scipy.sparse.csgraph.shortest_path(sub_matrix)` |

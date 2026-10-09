@@ -151,3 +151,32 @@ test('hands stay on the instrument and support feet stay planted across all pose
     }
   }
 });
+
+test('musical events own the clock, freeze on pause, return to idle and reset cleanly', () => {
+  const h = setup(); h.controller.resetTimeline();
+  assert.equal(h.frames.size, 0);
+  h.controller.noteEvent({channel:'E3',timestampMs:100,durationMs:180});
+  h.controller.renderTimeline({positionMs:145,status:'running'});
+  assert.equal(h.controller.snapshot().state,'TOCANDO');
+  const hand = h.elements.get('#strumming-arm').attrs.d;
+  h.controller.renderTimeline({positionMs:145,status:'paused'}); h.advance(5000);
+  assert.equal(h.elements.get('#strumming-arm').attrs.d,hand);
+  h.controller.renderTimeline({positionMs:190,status:'running'});
+  assert.notEqual(h.elements.get('#strumming-arm').attrs.d,hand);
+  h.controller.renderTimeline({positionMs:280,status:'running'});
+  assert.equal(h.controller.snapshot().state,'IDLE');
+  h.controller.resetTimeline(); assert.equal(h.controller.snapshot().state,'IDLE');
+  assert.equal(h.frames.size,0); assert.equal(h.timers.size,0);
+  h.controller.setState('TOCANDO');assert.equal(h.frames.size,1);
+});
+test('every musical channel drives a distinct fret pose; reduced motion has no timers', () => {
+  for(const reduced of [false,true]) {
+    const h=setup(reduced), hands=new Set();
+    for(const channel of ['E1','E2','E3','E4','E5']) {
+      h.controller.resetTimeline();h.controller.noteEvent({channel,timestampMs:0,durationMs:180});h.controller.renderTimeline({positionMs:90,status:'running'});
+      hands.add(h.elements.get('#fretting-arm').attrs.d);
+    }
+    assert.equal(hands.size,5);assert.equal(h.frames.size,0);assert.equal(h.timers.size,0);
+    h.controller.renderTimeline({positionMs:4000,status:'ended'});assert.equal(h.controller.snapshot().state,'IDLE');
+  }
+});

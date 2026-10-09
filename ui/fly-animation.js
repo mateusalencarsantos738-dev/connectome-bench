@@ -8,6 +8,8 @@ window.FlyAnimation = (() => {
     ERRO: { label: "Correção de postura", duration: 0.95 },
     COMBO: { label: "Sequência demonstrativa", duration: 1.8 },
   });
+  // Artistic channel-to-fret mapping, not a biological motor mapping.
+  const fretByChannel = Object.freeze({ E1: -18, E2: -10, E3: -2, E4: 6, E5: 10 });
   const pivot = [340, 215];
   const guitarPivot = [357, 299];
   const smooth = t => { const n = Math.max(0, Math.min(1, t)); return n * n * (3 - 2 * n); };
@@ -68,6 +70,7 @@ window.FlyAnimation = (() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     let state = "IDLE", elapsed = 0, clock = 0, lastTime = null;
     let paused = false, visible = true, destroyed = false, reduced = media.matches;
+    let timelineMode = false, notes = [], timelinePosition = 0;
     let frame = null, timer = null, timerStart = 0;
     let previousPose = null, currentPose = poseFor(state, 0, 0, reduced);
     const active = () => !destroyed && !paused && visible && !document.hidden;
@@ -75,10 +78,10 @@ window.FlyAnimation = (() => {
     const notify = () => onChange(snapshot());
     const attr = (id, name, value) => parts[id].setAttribute(name, String(value));
 
-    function render() {
-      const target = poseFor(state, elapsed, clock, reduced || paused);
+    function render(override) {
+      const target = override || poseFor(state, elapsed, clock, reduced || paused);
       const mix = reduced || paused ? 1 : smooth(elapsed / .16);
-      const pose = Object.fromEntries(Object.entries(target).map(([key, value]) => [key, previousPose ? previousPose[key] + (value - previousPose[key]) * mix : value]));
+      const pose = Object.fromEntries(Object.entries(target).map(([key, value]) => [key, previousPose && !override ? previousPose[key] + (value - previousPose[key]) * mix : value]));
       currentPose = pose;
       attr("fly-pose", "transform", `translate(0 ${pose.y}) rotate(${pose.lean} ${point(pivot)})`);
       attr("head", "transform", `rotate(${pose.head} 387 174)`);
@@ -129,7 +132,7 @@ window.FlyAnimation = (() => {
     }
 
     function schedule() {
-      if (!active() || frame !== null || timer !== null) return;
+      if (timelineMode || !active() || frame !== null || timer !== null) return;
       if (reduced) {
         const duration = states[state].duration;
         if (duration !== null) {
@@ -160,6 +163,7 @@ window.FlyAnimation = (() => {
     function setState(next) {
       if (destroyed || !Object.hasOwn(states, next)) return false;
       stopClock();
+      timelineMode = false; notes = [];
       previousPose = currentPose;
       state = next;
       elapsed = 0;
@@ -189,9 +193,38 @@ window.FlyAnimation = (() => {
       stopClock();
       reduced = event.matches;
       previousPose = null;
-      render();
+      if (timelineMode) renderTimeline({ positionMs: timelinePosition, status: paused ? "paused" : "running" });
+      else render();
       notify();
       schedule();
+    }
+    function resetTimeline() {
+      stopClock(); timelineMode = true; notes = []; paused = false; previousPose = null;
+      renderTimeline({ positionMs: 0, status: "ready" });
+    }
+    function noteEvent(event) { if (!destroyed && timelineMode) notes.push(event); }
+    function renderTimeline(info) {
+      if (destroyed) return;
+      timelinePosition = info.positionMs;
+      paused = info.status === "paused";
+      notes = notes.filter(note => timelinePosition < note.timestampMs + note.durationMs);
+      if (["ended", "ready", "error"].includes(info.status)) notes = [];
+      const next = notes.length ? "TOCANDO" : "IDLE";
+      const changed = state !== next;
+      state = next;
+      const pose = poseFor("IDLE", 0, timelinePosition / 1000, reduced);
+      for (const note of notes) {
+        const progress = Math.max(0, (timelinePosition - note.timestampMs) / note.durationMs);
+        const envelope = reduced ? 1 : Math.sin(Math.PI * progress) ** 2;
+        pose.strum += reduced ? 0 : 4.8 * Math.sin(2 * Math.PI * progress) * envelope;
+        pose.fret += fretByChannel[note.channel] * envelope;
+        pose.head -= envelope; pose.guitar -= .5 * envelope;
+        pose.strings = reduced ? 0 : Math.max(pose.strings, .7 * envelope);
+      }
+      pose.strum = Math.max(-5.5, Math.min(5.5, pose.strum));
+      pose.fret = Math.max(-18, Math.min(10, pose.fret));
+      render(pose);
+      if (changed) notify();
     }
     function destroy() {
       stopClock();
@@ -204,7 +237,7 @@ window.FlyAnimation = (() => {
     render();
     notify();
     schedule();
-    return Object.freeze({ setState, setPaused, setVisible, snapshot, destroy });
+    return Object.freeze({ setState, setPaused, setVisible, snapshot, destroy, resetTimeline, noteEvent, renderTimeline });
   }
   return Object.freeze({ states, create });
 })();

@@ -37,7 +37,7 @@ Todo notebook do projeto DEVE seguir esta ordem:
 - [Listar arquivos ou objetos produzidos, ex: `results/tables/topology_metrics.csv`]
 
 **Referências:**
-- AGENTS.md, Seção N
+- AGENTS.md (regras gerais) e docs/index.md (referência da fase)
 - [Link para paper relevante se houver]
 ```
 
